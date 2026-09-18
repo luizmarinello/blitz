@@ -2,7 +2,7 @@ import './styles.css';
 import { api, ApiErro } from './api';
 import { aplicarPrefs } from './prefs';
 import { estado, renderizar, rota } from './router';
-import { telaLogin, telaCadastro, telaRecuperar, telaTermos } from './telas/auth';
+import { telaLogin, telaCadastro, telaRecuperar, telaRedefinir, telaTermos } from './telas/auth';
 import { telaPainel } from './telas/painel';
 import { telaTarefa } from './telas/tarefa';
 import { telaModos } from './telas/modos';
@@ -16,6 +16,7 @@ import { telaPrivacidade, telaExportar, telaExcluirConta } from './telas/privaci
 rota('login', telaLogin, { publica: true, titulo: 'Entrar' });                       // 02
 rota('cadastro', telaCadastro, { publica: true, titulo: 'Criar conta' });            // 03
 rota('recuperar', telaRecuperar, { publica: true, titulo: 'Recuperar senha' });      // 04
+rota('redefinir', telaRedefinir, { publica: true, titulo: 'Redefinir senha' });      // 04 (passo 2, via link do e-mail)
 rota('termos', telaTermos, { publica: true, titulo: 'Termos e Privacidade' });
 rota('', telaPainel, { titulo: 'Blitz' });                                            // 05
 rota('tarefas/:id', telaTarefa, { titulo: 'Tarefa' });                               // 06

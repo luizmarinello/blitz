@@ -130,10 +130,31 @@ class FluxoPrincipalTest {
             .andExpect(content().string(containsString("titulo")));
     }
 
-    @Test @Order(9) void exclusaoAnonimizaEImpedeLogin() throws Exception {
-        chamar(delete("/api/privacidade/conta").contentType(MediaType.APPLICATION_JSON).content(j("{'senha':'errada'}")), 401);
-        chamar(delete("/api/privacidade/conta").contentType(MediaType.APPLICATION_JSON).content(j("{'senha':'senha12345'}")), 200);
+    @Autowired br.com.blitz.auth.RecuperacaoSenhaService recuperacao;
+    @Autowired br.com.blitz.usuario.UsuarioRepository usuarios;
+
+    @Test @Order(9) void recuperacaoDeSenhaComTokenAssinado() throws Exception {
+        // pedido: mesma resposta para e-mail existente e inexistente (não revela contas)
+        mvc.perform(post("/api/auth/recuperar").contentType(MediaType.APPLICATION_JSON).content(j("{'email':'" + EMAIL + "'}")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.mensagem", containsString("Se existir")));
+        mvc.perform(post("/api/auth/recuperar").contentType(MediaType.APPLICATION_JSON).content(j("{'email':'ninguem@blitz.local'}")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.mensagem", containsString("Se existir")));
+
+        var u = usuarios.findByEmailIgnoreCase(EMAIL).orElseThrow();
+        String token = recuperacao.gerarToken(u);
+        chamar(post("/api/auth/redefinir").contentType(MediaType.APPLICATION_JSON).content(j("{'token':'x.y.z','novaSenha':'outrasenha123'}")), 400);
+        chamar(post("/api/auth/redefinir").contentType(MediaType.APPLICATION_JSON).content(j("{'token':'" + token + "','novaSenha':'curta'}")), 400);
+        chamar(post("/api/auth/redefinir").contentType(MediaType.APPLICATION_JSON).content(j("{'token':'" + token + "','novaSenha':'outrasenha123'}")), 200);
+        // uso único: depois da troca o mesmo token não vale mais
+        chamar(post("/api/auth/redefinir").contentType(MediaType.APPLICATION_JSON).content(j("{'token':'" + token + "','novaSenha':'terceira123'}")), 400);
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-            .content(j("{'email':'" + EMAIL + "','senha':'senha12345'}"))).andExpect(status().isUnauthorized());
+            .content(j("{'email':'" + EMAIL + "','senha':'outrasenha123'}"))).andExpect(status().isOk());
+    }
+
+    @Test @Order(10) void exclusaoAnonimizaEImpedeLogin() throws Exception {
+        chamar(delete("/api/privacidade/conta").contentType(MediaType.APPLICATION_JSON).content(j("{'senha':'errada'}")), 401);
+        chamar(delete("/api/privacidade/conta").contentType(MediaType.APPLICATION_JSON).content(j("{'senha':'outrasenha123'}")), 200);
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+            .content(j("{'email':'" + EMAIL + "','senha':'outrasenha123'}"))).andExpect(status().isUnauthorized());
     }
 }

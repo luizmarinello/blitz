@@ -109,18 +109,83 @@ export function telaCadastro(root: HTMLElement) {
   q(root, '#nome').focus();
 }
 
+// RF03 passo 1: pedir o link. A resposta é a mesma exista ou não a conta.
 export function telaRecuperar(root: HTMLElement) {
-  // RF03 é pendência nº 9: sem provedor de e-mail configurado ainda. Melhor dizer isso do que fingir que envia.
   montar(root, html`
     <section class="auth card">
       <a class="logo" href="#/login">Blitz<span>.</span></a>
       <h1>Recuperar senha</h1>
-      <div class="alerta alerta-aviso" role="status">
-        A redefinição de senha por e-mail ainda não está disponível nesta versão do protótipo (RF03, em desenvolvimento).
-      </div>
-      <p>Se você está logado em outro dispositivo, altere a senha em <strong>Perfil e preferências</strong>. Caso contrário, fale com a equipe do Blitz.</p>
-      <p style="text-align:center"><a href="#/login">Voltar para o login</a></p>
+      <p class="muted small" style="text-align:center">Informe o e-mail da conta. Enviaremos um link válido por 1 hora.</p>
+      <form novalidate>
+        <p class="erro" data-erro-geral role="alert"></p>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" required />
+          <span class="erro" data-erro="email"></span>
+        </div>
+        <button class="btn" type="submit" style="width:100%;justify-content:center">Enviar link</button>
+      </form>
+      <p style="margin-top:var(--space-4);text-align:center"><a href="#/login">Voltar para o login</a></p>
     </section>`);
+  const form = q<HTMLFormElement>(root, 'form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = q<HTMLButtonElement>(form, 'button[type=submit]');
+    btn.disabled = true;
+    try {
+      const r = await api.recuperar(dados(form).email);
+      montar(root, html`
+        <section class="auth card">
+          <a class="logo" href="#/login">Blitz<span>.</span></a>
+          <h1>Verifique seu e-mail</h1>
+          <div class="alerta alerta-ok" role="status">${r.mensagem}</div>
+          <p class="muted small">Não chegou? Confira a caixa de spam ou <a href="#/recuperar">peça outro link</a>.</p>
+          <p style="text-align:center"><a href="#/login">Voltar para o login</a></p>
+        </section>`);
+    } catch (err) { mostrarErros(form, err); btn.disabled = false; }
+  });
+  q(root, '#email').focus();
+}
+
+// RF03 passo 2: chegou pelo link do e-mail (#/redefinir?token=...).
+export function telaRedefinir(root: HTMLElement, params: Record<string, string>) {
+  const token = params.token ?? '';
+  if (!token) {
+    montar(root, html`<section class="auth card"><h1>Link incompleto</h1><p>Abra o link exatamente como veio no e-mail ou <a href="#/recuperar">peça um novo</a>.</p></section>`);
+    return;
+  }
+  montar(root, html`
+    <section class="auth card">
+      <a class="logo" href="#/login">Blitz<span>.</span></a>
+      <h1>Nova senha</h1>
+      <form novalidate>
+        <p class="erro" data-erro-geral role="alert"></p>
+        <div class="campo">
+          <label for="novaSenha">Nova senha <span class="muted small">(mínimo 8 caracteres)</span></label>
+          <input id="novaSenha" name="novaSenha" type="password" autocomplete="new-password" required minlength="8" />
+          <span class="erro" data-erro="novaSenha"></span>
+        </div>
+        <button class="btn" type="submit" style="width:100%;justify-content:center">Redefinir senha</button>
+      </form>
+      <p style="margin-top:var(--space-4);text-align:center"><a href="#/login">Voltar para o login</a></p>
+    </section>`);
+  const form = q<HTMLFormElement>(root, 'form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = q<HTMLButtonElement>(form, 'button[type=submit]');
+    btn.disabled = true;
+    try {
+      const r = await api.redefinir(token, dados(form).novaSenha);
+      toast(r.mensagem, 'ok');
+      navegar('#/login');
+    } catch (err) {
+      mostrarErros(form, err);
+      btn.disabled = false;
+      const geral = form.querySelector<HTMLElement>('[data-erro-geral]');
+      if (geral?.textContent) geral.innerHTML += ' <a href="#/recuperar">Pedir novo link</a>';
+    }
+  });
+  q(root, '#novaSenha').focus();
 }
 
 export function telaTermos(root: HTMLElement) {

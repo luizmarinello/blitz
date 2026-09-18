@@ -10,6 +10,14 @@ spring:
     open-in-view: false
   flyway.enabled: true
   jackson.default-property-inclusion: non_null
+  mail:                            # RF03: SMTP de qualquer provedor. Sem SMTP_HOST, o link vai para o log (só desenvolvimento)
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties.mail.smtp:
+      auth: true
+      starttls.enable: true
 
 server:
   port: ${PORT:8080}
@@ -24,6 +32,9 @@ server:
 
 blitz:
   politica-versao: "1.0"          # RNF-LGPD06: versao gravada em cada consentimento
+  url: ${APP_URL:http://localhost:8080}                 # base dos links enviados por e-mail
+  segredo: ${APP_SECRET:}                               # assina tokens de recuperacao; vazio = aleatorio a cada start
+  email-remetente: ${EMAIL_REMETENTE:${SMTP_USER:nao-responda@blitz.local}}
   ia:
     api-key: ${GEMINI_API_KEY:}   # vazio = modo fallback (RF17)
     modelo: ${GEMINI_MODELO:gemini-2.0-flash}

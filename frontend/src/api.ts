@@ -62,6 +62,8 @@ export const api = {
   cadastro: (nome: string, email: string, senha: string, aceitaTermos: boolean) =>
     chamar<Usuario>('POST', '/api/auth/cadastro', { nome, email, senha, aceitaTermos }),
   logout: () => chamar<void>('POST', '/api/auth/logout'),
+  recuperar: (email: string) => chamar<{ mensagem: string }>('POST', '/api/auth/recuperar', { email }),
+  redefinir: (token: string, novaSenha: string) => chamar<{ mensagem: string }>('POST', '/api/auth/redefinir', { token, novaSenha }),
 
   // UC02
   listas: () => chamar<Lista[]>('GET', '/api/listas'),

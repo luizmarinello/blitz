@@ -61,6 +61,10 @@ Ou tudo via Docker: `docker compose up --build` e abra http://localhost:8080.
 | `IA_LIMITE_TOKENS_DIA` | `20000` | limite por usuário em 24h (RNF09) |
 | `IA_PSEUDONIMO_SAL` | `blitz-dev` | sal do identificador pseudonimizado nos logs (RNF-LGPD07) |
 | `COOKIE_SECURE` | `false` | `true` em produção (HTTPS) |
+| `APP_URL` | `http://localhost:8080` | base dos links enviados por e-mail (RF03) |
+| `APP_SECRET` | vazio | assina os tokens de redefinição de senha; vazio = aleatório a cada start (links caem no reinício) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` | vazio / `587` | SMTP de qualquer provedor (Gmail com senha de app, Brevo, Resend…). Sem `SMTP_HOST`, o link de redefinição vai para o **log** do servidor (só desenvolvimento) |
+| `EMAIL_REMETENTE` | `SMTP_USER` | remetente dos e-mails |
 | `PORT` | `8080` | porta HTTP (o Render define) |
 
 ## Testes
@@ -84,7 +88,7 @@ Há também um teste de fumaça por `curl` contra um servidor rodando: `BASE=htt
 
 | Método e rota | Caso de uso |
 |---|---|
-| `POST /api/auth/cadastro` · `login` · `logout` · `GET /api/auth/me` | UC01 |
+| `POST /api/auth/cadastro` · `login` · `logout` · `GET /api/auth/me` · `POST /api/auth/recuperar` · `POST /api/auth/redefinir` | UC01, RF03 |
 | `GET/POST/PUT/DELETE /api/listas` · `GET /api/tarefas` · `POST /api/listas/{id}/tarefas` · `PUT/DELETE /api/tarefas/{id}` · `PATCH /api/tarefas/{id}/status` | UC02 |
 | `GET/POST/PUT/DELETE /api/modos` | UC05 |
 | `POST /api/sessoes` · `GET /api/sessoes/ativa` · `POST /api/sessoes/{id}/encerrar` · `DELETE /api/sessoes/{id}` · `GET /api/sessoes` · `GET /api/metricas` | UC03 |
@@ -117,7 +121,7 @@ Dockerfile · docker-compose.yml · render.yaml
 | 6 | Auditar payload enviado ao provedor | **Feito** — sai só título, prioridade, prazo, horas, status (`IaController.instrucao`) |
 | 7 | Reduzir persistência do conteúdo das conversas | **Pendente** — o schema exige `mensagem NOT NULL`; mudar exige discutir a modelagem |
 | 8 | Comportamento com provedor indisponível | **Feito** — fallback determinístico, coberto pelo teste |
-| 9 | Recuperação de senha | **Pendente** — tela existe e diz honestamente que não envia e-mail ainda |
+| 9 | Recuperação de senha | **Feito** — token assinado (HMAC com hash da senha, 1h, uso único), e-mail via SMTP; sem tabela nova |
 | 10 | Drag and drop no quadro | **Parcial** — mover por botões (equivalente por teclado); arrastar não implementado |
 | 11 | Painel administrativo | **Pendente** — rotas `/api/admin/**` já exigem `ADMINISTRADOR`, sem endpoints nem tela |
 

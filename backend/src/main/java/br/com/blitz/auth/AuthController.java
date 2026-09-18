@@ -44,14 +44,16 @@ public class AuthController {
     private final PasswordEncoder encoder;
     private final AuthenticationManager authManager;
     private final SecurityContextRepository contextRepo;
+    private final RecuperacaoSenhaService recuperacao;
     private final String politicaVersao;
 
     AuthController(UsuarioRepository usuarios, ConsentimentoRepository consentimentos, PreferenciaRepository preferencias,
                    ListaRepository listas, PasswordEncoder encoder, AuthenticationManager authManager,
-                   SecurityContextRepository contextRepo, @Value("${blitz.politica-versao}") String politicaVersao) {
+                   SecurityContextRepository contextRepo, RecuperacaoSenhaService recuperacao,
+                   @Value("${blitz.politica-versao}") String politicaVersao) {
         this.usuarios = usuarios; this.consentimentos = consentimentos; this.preferencias = preferencias;
         this.listas = listas; this.encoder = encoder; this.authManager = authManager;
-        this.contextRepo = contextRepo; this.politicaVersao = politicaVersao;
+        this.contextRepo = contextRepo; this.recuperacao = recuperacao; this.politicaVersao = politicaVersao;
     }
 
     public record Cadastro(
@@ -61,6 +63,26 @@ public class AuthController {
         @AssertTrue(message = "É preciso aceitar os Termos de Uso e a Política de Privacidade.") boolean aceitaTermos) {}
 
     public record Login(@NotBlank(message = "Informe seu e-mail.") String email, @NotBlank(message = "Informe sua senha.") String senha) {}
+    public record Recuperar(@NotBlank(message = "Informe seu e-mail.") @Email(message = "E-mail inválido.") String email) {}
+    public record Redefinir(@NotBlank String token,
+                            @NotBlank(message = "Informe a nova senha.") @Size(min = 8, max = 72, message = "A senha precisa ter entre 8 e 72 caracteres.") String novaSenha) {}
+
+    /** RF03. Resposta idêntica exista ou não a conta, para não revelar e-mails cadastrados. */
+    @PostMapping("/recuperar")
+    public Map<String, String> recuperar(@RequestBody @Validated Recuperar r) {
+        usuarios.findByEmailIgnoreCase(r.email().trim()).filter(u -> u.ativo).ifPresent(recuperacao::enviarLink);
+        return Map.of("mensagem", "Se existir uma conta com este e-mail, enviamos um link para redefinir a senha. Ele vale por 1 hora.");
+    }
+
+    @PostMapping("/redefinir")
+    public Map<String, String> redefinir(@RequestBody @Validated Redefinir r) {
+        Long id = recuperacao.validar(r.token(), usuarios::findById)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este link é inválido ou já expirou. Peça um novo."));
+        Usuario u = usuarios.findById(id).orElseThrow();
+        u.senhaHash = encoder.encode(r.novaSenha());
+        usuarios.save(u);
+        return Map.of("mensagem", "Senha redefinida. Você já pode entrar com a nova senha.");
+    }
 
     @PostMapping("/cadastro")
     @ResponseStatus(HttpStatus.CREATED)
