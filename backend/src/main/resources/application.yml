@@ -1,0 +1,33 @@
+spring:
+  application.name: blitz
+  datasource:
+    # Neon/Render: DATABASE_URL no formato JDBC, ex. jdbc:postgresql://host/db?sslmode=require
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/blitz}
+    username: ${DATABASE_USER:blitz}
+    password: ${DATABASE_PASSWORD:blitz}
+  jpa:
+    hibernate.ddl-auto: none      # schema vem do Flyway (V1 = script S3 da equipe)
+    open-in-view: false
+  flyway.enabled: true
+  jackson.default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework   # Render fica atras de proxy HTTPS (RNF04)
+  servlet.session:
+    timeout: 12h
+    cookie:
+      name: BLITZ_SESSAO
+      http-only: true
+      same-site: strict
+      secure: ${COOKIE_SECURE:false}
+
+blitz:
+  politica-versao: "1.0"          # RNF-LGPD06: versao gravada em cada consentimento
+  ia:
+    api-key: ${GEMINI_API_KEY:}   # vazio = modo fallback (RF17)
+    modelo: ${GEMINI_MODELO:gemini-2.0-flash}
+    limite-tokens-dia: ${IA_LIMITE_TOKENS_DIA:20000}   # RNF09
+    pseudonimo-sal: ${IA_PSEUDONIMO_SAL:blitz-dev}    # RNF-LGPD07: id pseudonimizado nos logs
+
+logging.level.br.com.blitz: INFO

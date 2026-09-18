@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Blitz: o aplicativo que não só organiza suas tarefas, mas decide com você o que fazer agora." />
+    <meta name="theme-color" content="#3B49DF" />
+    <title>Blitz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <script>
+      // RN08: preferências valem em todas as telas, inclusive antes do login. Aplica o que ficou salvo localmente.
+      try {
+        var p = JSON.parse(localStorage.getItem('blitz.prefs') || '{}');
+        var h = document.documentElement;
+        h.dataset.theme = p.tema || 'CLARO';
+        h.dataset.fonte = p.tamanhoFonte || 'MEDIO';
+        if (p.reduzirAnimacoes) h.dataset.motion = 'reduzir';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#app">Ir para o conteúdo</a>
+    <div id="shell"></div>
+    <main id="app" tabindex="-1" aria-live="polite">
+      <!-- Tela 01: carregamento -->
+      <div class="estado" role="status"><span class="spinner" aria-hidden="true"></span> Carregando o Blitz…</div>
+    </main>
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+# Blueprint do Render. Banco: Neon (crie o projeto no Neon e cole a URL JDBC em DATABASE_URL).
+# Formato esperado: jdbc:postgresql://<host>/<db>?sslmode=require  (usuário e senha em variáveis separadas)
+services:
+  - type: web
+    name: blitz
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODELO
+        value: gemini-2.5-flash
+      - key: IA_LIMITE_TOKENS_DIA
+        value: "20000"
+      - key: IA_PSEUDONIMO_SAL
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"

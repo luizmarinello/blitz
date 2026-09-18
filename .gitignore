@@ -1,0 +1,19 @@
+# Java / Maven
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/.mvn/wrapper/dists/
+
+# Front (o build vai para dentro do backend e é gerado no Docker/CI)
+frontend/node_modules/
+backend/src/main/resources/static/
+
+# Ambiente
+.env
+*.log
+
+# IDE / SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

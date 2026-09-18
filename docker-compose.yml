@@ -1,0 +1,35 @@
+# Desenvolvimento local.
+#   Só o banco:   docker compose up -d db
+#   Tudo:         docker compose up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: blitz
+      POSTGRES_USER: blitz
+      POSTGRES_PASSWORD: blitz
+    ports:
+      - "5432:5432"
+    volumes:
+      - blitz_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blitz -d blitz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/blitz
+      DATABASE_USER: blitz
+      DATABASE_PASSWORD: blitz
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "8080:8080"
+
+volumes:
+  blitz_pgdata:
