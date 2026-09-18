@@ -5,11 +5,16 @@ backend/.mvn/wrapper/dists/
 
 # Front (o build vai para dentro do backend e é gerado no Docker/CI)
 frontend/node_modules/
+node_modules/
 backend/src/main/resources/static/
 
 # Ambiente
 .env
 *.log
+
+# Ferramentas locais de agente (Neon skills); não fazem parte do produto
+.claude/
+skills-lock.json
 
 # IDE / SO
 .idea/
@@ -17,3 +22,6 @@ backend/src/main/resources/static/
 *.iml
 .DS_Store
 Thumbs.db
+.neon
+.env.local
+node_modules/
