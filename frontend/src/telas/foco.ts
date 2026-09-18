@@ -39,7 +39,7 @@ function tick() {
   }
   salvarTimer();
   document.title = `${relogio(Math.max(0, timer.restante))} ${timer.fase === 'foco' ? 'Foco' : 'Pausa'} · Blitz`;
-  if (raiz?.isConnected) atualizarRelogio();
+  if (raiz?.querySelector('[data-tempo]')) atualizarRelogio();   // só se a tela de foco ainda estiver montada
 }
 
 function garantirIntervalo() { if (intervalo === undefined) intervalo = window.setInterval(tick, 500); }
