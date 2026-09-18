@@ -95,10 +95,12 @@ export async function telaPainel(root: HTMLElement) {
       return;
     }
     const d = hoje();
-    montar(quadro, html`<div class="colunas">${STATUS.map((s) => {
+    montar(quadro, html`
+      <p class="muted small" id="dica-quadro">Arraste os cartões entre as colunas ou use os botões de seta de cada cartão (teclado).</p>
+      <div class="colunas">${STATUS.map((s) => {
       const itens = daLista.filter((t) => t.status === s);
       return html`
-        <section class="coluna" aria-labelledby="col-${s}">
+        <section class="coluna" aria-labelledby="col-${s}" data-status="${s}">
           <h3 id="col-${s}">${rotuloStatus[s]} <span class="contador">${itens.length}</span></h3>
           <ul class="tarefas">
             ${itens.length === 0 ? html`<li class="muted small" style="padding:var(--space-2)">Nada aqui.</li>` : ''}
@@ -106,7 +108,7 @@ export async function telaPainel(root: HTMLElement) {
               const i = STATUS.indexOf(t.status);
               const atrasada = t.prazo && t.prazo < d && t.status !== 'CONCLUIDA';
               return html`
-                <li class="tarefa ${t.status === 'CONCLUIDA' ? 'concluida' : ''}">
+                <li class="tarefa ${t.status === 'CONCLUIDA' ? 'concluida' : ''}" draggable="true" data-id="${t.id}" aria-describedby="dica-quadro">
                   <a class="tarefa-titulo" href="#/tarefas/${t.id}">${t.titulo}</a>
                   <div class="tarefa-meta">
                     <span class="chip chip-${t.prioridade}">${rotuloPrioridade[t.prioridade]}</span>
@@ -126,17 +128,44 @@ export async function telaPainel(root: HTMLElement) {
         </section>`;
     })}</div>`);
 
-    quadro.querySelectorAll<HTMLButtonElement>('[data-mover]').forEach((b) => b.addEventListener('click', async () => {
+    // teclado/mouse: botões de seta
+    quadro.querySelectorAll<HTMLButtonElement>('[data-mover]').forEach((b) => b.addEventListener('click', () => {
       const [id, status] = b.dataset.mover!.split(':');
       b.disabled = true;
-      try {
-        const nova = await api.mudarStatus(Number(id), status as Status);
-        tarefas = tarefas.map((t) => (t.id === nova.id ? nova : t));
-        desenharQuadro();
-        toast(`Movida para ${rotuloStatus[status]}.`, 'ok');
-      } catch (e) { b.disabled = false; toast(e instanceof Error ? e.message : 'Erro ao mover.', 'erro'); }
+      mover(Number(id), status as Status).catch(() => (b.disabled = false));
     }));
+
+    // US-02: drag and drop nativo (HTML5), sem biblioteca. Muda o status ao soltar em outra coluna.
+    quadro.querySelectorAll<HTMLElement>('.tarefa[draggable]').forEach((li) => {
+      li.addEventListener('dragstart', (e) => {
+        e.dataTransfer!.setData('text/plain', li.dataset.id!);
+        e.dataTransfer!.effectAllowed = 'move';
+        li.classList.add('arrastando');
+      });
+      li.addEventListener('dragend', () => li.classList.remove('arrastando'));
+    });
+    quadro.querySelectorAll<HTMLElement>('.coluna').forEach((col) => {
+      col.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer!.dropEffect = 'move'; col.classList.add('alvo'); });
+      col.addEventListener('dragleave', (e) => { if (!col.contains(e.relatedTarget as Node)) col.classList.remove('alvo'); });
+      col.addEventListener('drop', (e) => {
+        e.preventDefault();
+        col.classList.remove('alvo');
+        const id = Number(e.dataTransfer!.getData('text/plain'));
+        const status = col.dataset.status as Status;
+        const t = tarefas.find((x) => x.id === id);
+        if (t && t.status !== status) mover(id, status);
+      });
+    });
   };
+
+  async function mover(id: number, status: Status) {
+    try {
+      const nova = await api.mudarStatus(id, status);
+      tarefas = tarefas.map((t) => (t.id === nova.id ? nova : t));
+      desenharQuadro();
+      toast(`Movida para ${rotuloStatus[status]}.`, 'ok');
+    } catch (e) { toast(e instanceof Error ? e.message : 'Erro ao mover.', 'erro'); throw e; }
+  }
   desenharQuadro();
 
   // ---------- abas ----------
