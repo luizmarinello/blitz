@@ -60,6 +60,8 @@ Ou tudo via Docker: `docker compose up --build` e abra http://localhost:8080.
 | `GEMINI_MODELO` | `gemini-2.0-flash` | modelo |
 | `IA_LIMITE_TOKENS_DIA` | `20000` | limite por usuário em 24h (RNF09) |
 | `IA_PSEUDONIMO_SAL` | `blitz-dev` | sal do identificador pseudonimizado nos logs (RNF-LGPD07) |
+| `IA_RETENCAO_DIAS` | `7` | dias até apagar o conteúdo das conversas com a IA, mantendo só data e tokens (achado IA-02); `0` desliga |
+| `ADMIN_EMAIL` | vazio | e-mail da conta que vira `ADMINISTRADOR` no start ou no cadastro (RN04) |
 | `COOKIE_SECURE` | `false` | `true` em produção (HTTPS) |
 | `APP_URL` | `http://localhost:8080` | base dos links enviados por e-mail (RF03) |
 | `APP_SECRET` | vazio | assina os tokens de redefinição de senha; vazio = aleatório a cada start (links caem no reinício) |
@@ -93,7 +95,10 @@ Há também um teste de fumaça por `curl` contra um servidor rodando: `BASE=htt
 | `GET/POST/PUT/DELETE /api/modos` | UC05 |
 | `POST /api/sessoes` · `GET /api/sessoes/ativa` · `POST /api/sessoes/{id}/encerrar` · `DELETE /api/sessoes/{id}` · `GET /api/sessoes` · `GET /api/metricas` | UC03 |
 | `POST /api/ia/mensagem` · `GET /api/ia/historico` · `GET /api/ia/limite` | UC04 |
+| `GET /api/sprints/atual` · `POST /api/sprints/planejar` | RF09 |
 | `GET/PUT /api/acessibilidade` | UC12 |
+| `GET /api/admin/usuarios` · `PATCH /api/admin/usuarios/{id}` · `GET/POST/PUT /api/admin/organizacoes` · `GET /api/admin/metricas` · `GET /api/admin/integracoes` | UC06, UC08, UC10 (só `ADMINISTRADOR`) |
+| `GET /api/gestor/metricas` | RF21 (`GESTOR` ou `ADMINISTRADOR`) |
 | `PUT /api/perfil` · `PUT /api/perfil/senha` | RF-LGPD03 |
 | `GET /api/privacidade/consentimentos` · `GET /api/privacidade/exportar` (.json) · `exportar.csv` · `DELETE /api/privacidade/conta` | UC11 |
 
@@ -119,10 +124,10 @@ Dockerfile · docker-compose.yml · render.yaml
 | 4 | Tela Preferências de acessibilidade | **Feito** (tema, fonte, contraste, reduzir animações; aplicado em todas as telas) |
 | 5 | Rate limit da IA por usuário | **Feito** (janela de 24h sobre `conversa_ia.tokens_usados`; 429 sem bloquear o resto) |
 | 6 | Auditar payload enviado ao provedor | **Feito** — sai só título, prioridade, prazo, horas, status (`IaController.instrucao`) |
-| 7 | Reduzir persistência do conteúdo das conversas | **Pendente** — o schema exige `mensagem NOT NULL`; mudar exige discutir a modelagem |
+| 7 | Reduzir persistência do conteúdo das conversas | **Feito (por retenção)** — conteúdo apagado após `IA_RETENCAO_DIAS` (padrão 7), ficam só data e tokens para o limite. Remover a coluna `mensagem` exige discutir a modelagem |
 | 8 | Comportamento com provedor indisponível | **Feito** — fallback determinístico, coberto pelo teste |
 | 9 | Recuperação de senha | **Feito** — token assinado (HMAC com hash da senha, 1h, uso único), e-mail via SMTP; sem tabela nova |
-| 10 | Drag and drop no quadro | **Parcial** — mover por botões (equivalente por teclado); arrastar não implementado |
-| 11 | Painel administrativo | **Pendente** — rotas `/api/admin/**` já exigem `ADMINISTRADOR`, sem endpoints nem tela |
+| 10 | Drag and drop no quadro | **Feito** — HTML5 nativo entre colunas de status; botões de seta como equivalente por teclado |
+| 11 | Painel administrativo | **Feito (mínimo)** — usuários (papel, ativo, organização), organizações, métricas agregadas pela view, status das integrações; gestor vê só a própria equipe. UC07 e UC09 sem requisito detalhado, fora |
 
-Também não implementado: organização automática em sprints (RF09; a tabela `sprint` existe e está vazia).
+RF09 (organização automática em sprints): **feito** como sprint semanal por capacidade em horas, ordenando por prazo, prioridade e esforço (widget "Sprint da semana" no painel). Não implementado: reordenar cartões dentro da coluna, sprints futuras, admin de "conteúdos" e "funcionalidades" (UC07/UC09).

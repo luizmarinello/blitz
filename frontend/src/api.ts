@@ -8,7 +8,7 @@ export type TamanhoFonte = 'PEQUENO' | 'MEDIO' | 'GRANDE';
 export interface Usuario { id: number; nome: string; email: string; papel: string }
 export interface Lista { id: number; nome: string; posicao: number }
 export interface Tarefa {
-  id: number; listaId: number; titulo: string; descricao?: string; prioridade: Prioridade;
+  id: number; listaId: number; sprintId?: number; titulo: string; descricao?: string; prioridade: Prioridade;
   horasEstimadas?: number; prazo?: string; status: Status; posicao: number; concluidaEm?: string; criadoEm: string;
 }
 export interface TarefaEntrada {
@@ -26,6 +26,22 @@ export interface LimiteIa { usados: number; maximo: number; renovaEm: string; co
 export interface RespostaIa { resposta: string; tokensUsados: number; fallback: boolean; limite: LimiteIa }
 export interface Conversa { id: number; mensagem: string; resposta?: string; dataHora: string }
 export interface Consentimento { id: number; versaoPolitica: string; aceitoEm: string; canal: string; finalidade: string }
+export interface Sprint { id: number; dataInicio: string; dataFim: string; geradaPorIa: boolean }
+export interface SprintAtual { sprint: Sprint; tarefas: number; horasPlanejadas: number }
+export interface Planejamento extends SprintAtual { foraDaSprint: number }
+export type Papel = 'USUARIO' | 'GESTOR' | 'ADMINISTRADOR';
+export interface UsuarioAdmin { id: number; nome: string; email: string; papel: Papel; ativo: boolean; organizacaoId?: number; criadoEm: string; anonimizadoEm?: string }
+export interface Organizacao { id: number; nome: string; licencasTotais: number; criadoEm: string }
+export interface MetricasOrg { organizacao_id: number; organizacao: string; colaboradores: number; media_minutos_por_sessao?: number; total_sessoes: number }
+export interface MetricasAdmin {
+  usuarios: number; usuariosAtivos: number; usuariosAnonimizados: number; sessoes: number; minutosFoco: number;
+  tarefas: number; tarefasConcluidas: number; conversasIa30Dias: number; tokensIa30Dias: number; organizacoes: MetricasOrg[];
+}
+export interface Integracoes {
+  ia: { provedor: string; modelo: string; configurado: boolean; limiteTokensDia: number };
+  email: { provedor: string; configurado: boolean; host: string };
+}
+export interface MetricasGestor { semOrganizacao?: boolean; organizacao?: string; colaboradores?: number; metricas?: MetricasOrg | null }
 
 export class ApiErro extends Error {
   constructor(public status: number, mensagem: string, public campos: Record<string, string> = {}, public corpo: unknown = null) {
@@ -105,4 +121,18 @@ export const api = {
   trocarSenha: (atual: string, nova: string) => chamar<void>('PUT', '/api/perfil/senha', { atual, nova }),
   consentimentos: () => chamar<Consentimento[]>('GET', '/api/privacidade/consentimentos'),
   excluirConta: (senha: string) => chamar<{ mensagem: string }>('DELETE', '/api/privacidade/conta', { senha }),
+
+  // RF09 sprints
+  sprintAtual: () => chamar<SprintAtual | undefined>('GET', '/api/sprints/atual'),
+  planejarSprint: (capacidadeHoras: number) => chamar<Planejamento>('POST', '/api/sprints/planejar', { capacidadeHoras }),
+
+  // UC06–UC10 admin / RF21 gestor
+  adminUsuarios: () => chamar<UsuarioAdmin[]>('GET', '/api/admin/usuarios'),
+  adminAlterarUsuario: (id: number, p: { papel?: Papel; ativo?: boolean; organizacaoId?: number | null }) =>
+    chamar<UsuarioAdmin>('PATCH', `/api/admin/usuarios/${id}`, { papel: p.papel, ativo: p.ativo, organizacaoId: p.organizacaoId ?? undefined, limparOrganizacao: p.organizacaoId === null }),
+  adminOrganizacoes: () => chamar<Organizacao[]>('GET', '/api/admin/organizacoes'),
+  adminCriarOrganizacao: (nome: string, licencasTotais: number) => chamar<Organizacao>('POST', '/api/admin/organizacoes', { nome, licencasTotais }),
+  adminMetricas: () => chamar<MetricasAdmin>('GET', '/api/admin/metricas'),
+  adminIntegracoes: () => chamar<Integracoes>('GET', '/api/admin/integracoes'),
+  gestorMetricas: () => chamar<MetricasGestor>('GET', '/api/gestor/metricas'),
 };

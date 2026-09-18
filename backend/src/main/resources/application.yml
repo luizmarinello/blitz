@@ -32,6 +32,7 @@ server:
 
 blitz:
   politica-versao: "1.0"          # RNF-LGPD06: versao gravada em cada consentimento
+  admin-email: ${ADMIN_EMAIL:}    # e-mail da conta que vira ADMINISTRADOR (RN04)
   url: ${APP_URL:http://localhost:8080}                 # base dos links enviados por e-mail
   segredo: ${APP_SECRET:}                               # assina tokens de recuperacao; vazio = aleatorio a cada start
   email-remetente: ${EMAIL_REMETENTE:${SMTP_USER:nao-responda@blitz.local}}
@@ -40,5 +41,6 @@ blitz:
     modelo: ${GEMINI_MODELO:gemini-2.0-flash}
     limite-tokens-dia: ${IA_LIMITE_TOKENS_DIA:20000}   # RNF09
     pseudonimo-sal: ${IA_PSEUDONIMO_SAL:blitz-dev}    # RNF-LGPD07: id pseudonimizado nos logs
+    retencao-dias: ${IA_RETENCAO_DIAS:7}              # achado IA-02: conteudo das conversas apagado apos N dias (0 desliga)
 
 logging.level.br.com.blitz: INFO

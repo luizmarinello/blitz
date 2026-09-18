@@ -42,6 +42,7 @@ class FluxoPrincipalTest {
         r.add("spring.datasource.username", () -> "postgres");
         r.add("spring.datasource.password", () -> "postgres");
         r.add("blitz.ia.api-key", () -> "");   // força o caminho alternativo (RF17)
+        r.add("blitz.admin-email", () -> EMAIL); // a conta de teste nasce ADMINISTRADOR (RN04)
     }
 
     @Autowired MockMvc mvc;
@@ -133,7 +134,48 @@ class FluxoPrincipalTest {
     @Autowired br.com.blitz.auth.RecuperacaoSenhaService recuperacao;
     @Autowired br.com.blitz.usuario.UsuarioRepository usuarios;
 
-    @Test @Order(9) void recuperacaoDeSenhaComTokenAssinado() throws Exception {
+    @Test @Order(9) void sprintSemanalRespeitaCapacidade() throws Exception {
+        chamar(post("/api/listas/" + listaId + "/tarefas").contentType(MediaType.APPLICATION_JSON)
+            .content(j("{'titulo':'Pequena e urgente','prioridade':'ALTA','prazo':'2026-09-20','horasEstimadas':3}")), 201);
+        chamar(post("/api/listas/" + listaId + "/tarefas").contentType(MediaType.APPLICATION_JSON)
+            .content(j("{'titulo':'Grande','prioridade':'BAIXA','horasEstimadas':30}")), 201);
+        mvc.perform(get("/api/sprints/atual").session(SESSAO)).andExpect(status().isNoContent());
+        mvc.perform(post("/api/sprints/planejar").session(SESSAO).contentType(MediaType.APPLICATION_JSON).content(j("{'capacidadeHoras':10}")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.tarefas").value(1))          // só a de 3h cabe em 10h
+            .andExpect(jsonPath("$.foraDaSprint").value(1))
+            .andExpect(jsonPath("$.sprint.dataInicio").exists());
+        mvc.perform(get("/api/sprints/atual").session(SESSAO)).andExpect(status().isOk()).andExpect(jsonPath("$.tarefas").value(1));
+    }
+
+    @Test @Order(10) void adminGerenciaUsuariosEVeMetricas() throws Exception {
+        // outra conta comum não acessa a administração (RN04)
+        MockHttpSession outra = new MockHttpSession();
+        mvc.perform(post("/api/auth/cadastro").session(outra).contentType(MediaType.APPLICATION_JSON)
+            .content(j("{'nome':'Comum','email':'comum@blitz.local','senha':'senha12345','aceitaTermos':true}"))).andExpect(status().isCreated());
+        mvc.perform(get("/api/admin/usuarios").session(outra)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/gestor/metricas").session(outra)).andExpect(status().isForbidden());
+
+        mvc.perform(get("/api/admin/usuarios").session(SESSAO)).andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.email=='" + EMAIL + "')].papel").value("ADMINISTRADOR"));
+        JsonNode org = corpo(chamar(post("/api/admin/organizacoes").contentType(MediaType.APPLICATION_JSON).content(j("{'nome':'Equipe T03N','licencasTotais':5}")), 201));
+        long comumId = corpo(mvc.perform(get("/api/admin/usuarios").session(SESSAO)).andReturn()).findValues("id").get(1).asLong();
+        mvc.perform(patch("/api/admin/usuarios/" + comumId).session(SESSAO).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"papel\":\"GESTOR\",\"organizacaoId\":" + org.get("id").asLong() + "}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.papel").value("GESTOR"));
+        // admin não altera o próprio papel
+        chamar(patch("/api/admin/usuarios/1").contentType(MediaType.APPLICATION_JSON).content(j("{'papel':'USUARIO'}")), 409);
+        mvc.perform(get("/api/admin/metricas").session(SESSAO)).andExpect(status().isOk()).andExpect(jsonPath("$.usuarios").value(2));
+        mvc.perform(get("/api/admin/integracoes").session(SESSAO)).andExpect(jsonPath("$.ia.configurado").value(false));
+        // gestor recém-promovido: precisa logar de novo para o papel valer na sessão; equipe < 5 => métricas suprimidas
+        MockHttpSession gestor = new MockHttpSession();
+        mvc.perform(post("/api/auth/login").session(gestor).contentType(MediaType.APPLICATION_JSON)
+            .content(j("{'email':'comum@blitz.local','senha':'senha12345'}"))).andExpect(status().isOk());
+        mvc.perform(get("/api/gestor/metricas").session(gestor)).andExpect(status().isOk())
+            .andExpect(jsonPath("$.organizacao").value("Equipe T03N")).andExpect(jsonPath("$.metricas").doesNotExist());
+    }
+
+    @Test @Order(11) void recuperacaoDeSenhaComTokenAssinado() throws Exception {
         // pedido: mesma resposta para e-mail existente e inexistente (não revela contas)
         mvc.perform(post("/api/auth/recuperar").contentType(MediaType.APPLICATION_JSON).content(j("{'email':'" + EMAIL + "'}")))
             .andExpect(status().isOk()).andExpect(jsonPath("$.mensagem", containsString("Se existir")));
@@ -151,7 +193,7 @@ class FluxoPrincipalTest {
             .content(j("{'email':'" + EMAIL + "','senha':'outrasenha123'}"))).andExpect(status().isOk());
     }
 
-    @Test @Order(10) void exclusaoAnonimizaEImpedeLogin() throws Exception {
+    @Test @Order(12) void exclusaoAnonimizaEImpedeLogin() throws Exception {
         chamar(delete("/api/privacidade/conta").contentType(MediaType.APPLICATION_JSON).content(j("{'senha':'errada'}")), 401);
         chamar(delete("/api/privacidade/conta").contentType(MediaType.APPLICATION_JSON).content(j("{'senha':'outrasenha123'}")), 200);
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)

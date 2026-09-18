@@ -23,6 +23,10 @@ services:
         generateValue: true
       - key: COOKIE_SECURE
         value: "true"
+      - key: ADMIN_EMAIL           # conta que vira ADMINISTRADOR (RN04)
+        sync: false
+      - key: IA_RETENCAO_DIAS      # dias até apagar o conteúdo das conversas com a IA (achado IA-02)
+        value: "7"
       # RF03 recuperação de senha: URL pública do app, segredo dos tokens e SMTP do seu provedor
       - key: APP_URL
         sync: false
