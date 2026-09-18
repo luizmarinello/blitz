@@ -56,6 +56,7 @@ public class IaController {
         Collections.reverse(lista);
         List<Map<String, Object>> saida = new ArrayList<>();
         for (ConversaIa c : lista) {
+            if (RetencaoConversas.MARCA.equals(c.mensagem)) continue;   // conteúdo já apagado pela retenção
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", c.id); m.put("mensagem", c.mensagem); m.put("resposta", c.resposta); m.put("dataHora", c.dataHora);
             saida.add(m);
