@@ -66,6 +66,8 @@ function casca(caminho: string) {
         ${link('#/modos', 'Modos', base === 'modos')}
         ${link('#/assistente', 'Assistente', base === 'assistente')}
         ${link('#/metricas', 'Métricas', base === 'metricas')}
+        ${estado.usuario.papel === 'ADMINISTRADOR' ? link('#/admin', 'Administração', base === 'admin') : ''}
+        ${estado.usuario.papel === 'GESTOR' ? link('#/admin', 'Minha equipe', base === 'admin') : ''}
       </nav>
       <span class="spacer"></span>
       <details class="menu">

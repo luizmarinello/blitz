@@ -37,6 +37,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")   // RN04
+                .requestMatchers("/api/gestor/**").hasAnyRole("GESTOR", "ADMINISTRADOR")   // RF21
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll())                                   // front estático
             .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> {

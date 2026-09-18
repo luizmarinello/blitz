@@ -50,11 +50,15 @@ public class AuthController {
     AuthController(UsuarioRepository usuarios, ConsentimentoRepository consentimentos, PreferenciaRepository preferencias,
                    ListaRepository listas, PasswordEncoder encoder, AuthenticationManager authManager,
                    SecurityContextRepository contextRepo, RecuperacaoSenhaService recuperacao,
-                   @Value("${blitz.politica-versao}") String politicaVersao) {
+                   @Value("${blitz.politica-versao}") String politicaVersao,
+                   @Value("${blitz.admin-email}") String adminEmail) {
         this.usuarios = usuarios; this.consentimentos = consentimentos; this.preferencias = preferencias;
         this.listas = listas; this.encoder = encoder; this.authManager = authManager;
         this.contextRepo = contextRepo; this.recuperacao = recuperacao; this.politicaVersao = politicaVersao;
+        this.adminEmail = adminEmail == null ? "" : adminEmail.trim();
     }
+
+    private final String adminEmail;
 
     public record Cadastro(
         @NotBlank(message = "Informe seu nome.") @Size(max = 180) String nome,
@@ -95,6 +99,7 @@ public class AuthController {
         u.nome = c.nome().trim();
         u.email = c.email().trim().toLowerCase();
         u.senhaHash = encoder.encode(c.senha());
+        if (!adminEmail.isBlank() && adminEmail.equalsIgnoreCase(u.email)) u.papel = br.com.blitz.usuario.Papel.ADMINISTRADOR;   // RN04
         u = usuarios.save(u);
 
         // RF-LGPD01 / RNF-LGPD06: registro imutável do aceite, com versão, data/hora e finalidade

@@ -11,6 +11,7 @@ import { telaAssistente } from './telas/assistente';
 import { telaMetricas } from './telas/metricas';
 import { telaPerfil, telaAcessibilidade } from './telas/perfil';
 import { telaPrivacidade, telaExportar, telaExcluirConta } from './telas/privacidade';
+import { telaAdmin } from './telas/admin';
 
 // Inventário de telas (seção 8): 01 carregamento está no index.html
 rota('login', telaLogin, { publica: true, titulo: 'Entrar' });                       // 02
@@ -29,6 +30,7 @@ rota('acessibilidade', telaAcessibilidade, { titulo: 'Acessibilidade' });       
 rota('privacidade', telaPrivacidade, { titulo: 'Privacidade e dados' });             // 13
 rota('privacidade/exportar', telaExportar, { titulo: 'Exportar dados' });            // 14
 rota('privacidade/excluir', telaExcluirConta, { titulo: 'Excluir conta' });          // 15
+rota('admin', telaAdmin, { titulo: 'Administração' });                               // UC06–UC10 (sem tela prototipada)
 
 async function iniciar() {
   try {
