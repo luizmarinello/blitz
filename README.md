@@ -10,11 +10,11 @@ Protótipo funcional do TCC da equipe T03N (Luiz Henrique, Vinicius Fagundes e R
 |---|---|
 | Back-end | Java 21 · Spring Boot 3.5 (Web, Security, Data JPA, Validation) · Flyway |
 | Banco | PostgreSQL 16 (schema `S3` da equipe, sem alterações) |
-| Front-end | TypeScript puro + HTML + CSS · Vite (sem framework) |
+| Front-end | TypeScript puro + HTML + CSS · Vite (sem framework) · publicado como Static Site |
 | IA | Google Gemini, chamado **somente pelo servidor** (`GeminiClient`) |
-| Infra | Docker (imagem única) · Render (web) · Neon (Postgres) · GitHub |
+| Infra | Docker (só a API) · Render (Static Site + Web Service) · Neon (Postgres) · GitHub Actions (CI) |
 
-O front é compilado para dentro do jar e servido pelo próprio Spring: uma origem, um deploy, cookie de sessão simples.
+Em produção o front e a API são dois serviços do Render em origens diferentes: a API libera CORS só para `FRONT_URL` e o cookie de sessão usa `SameSite=None; Secure`. Em desenvolvimento o Vite faz proxy de `/api` para o back local, então não há CORS.
 
 ## Rodar localmente
 
@@ -41,14 +41,24 @@ cd backend && ./mvnw -q test-compile dependency:build-classpath -Dmdep.includeSc
 
 Abra http://localhost:5173. Sem `GEMINI_API_KEY`, o assistente responde em **modo alternativo** (ordenação determinística por prazo, prioridade e esforço — RF17); o resto funciona normalmente.
 
-Build completo (front dentro do jar) e execução como em produção:
+Build de produção:
 
 ```bash
-cd frontend && npm run build          # gera backend/src/main/resources/static
+cd frontend && npm run build          # gera frontend/dist (Static Site)
 cd ../backend && ./mvnw -DskipTests package && java -jar target/blitz-0.1.0.jar
 ```
 
-Ou tudo via Docker: `docker compose up --build` e abra http://localhost:8080.
+Ou a API via Docker: `docker compose up --build` (porta 8080); o front em dev aponta para ela pelo proxy.
+
+## Deploy (Render + Neon)
+
+1. **Neon:** crie o projeto (ou use o existente) e copie host, banco, usuário e senha da connection string.
+2. **Render:** *New → Blueprint* apontando para este repositório; o [`render.yaml`](render.yaml) cria `blitz-api` (Docker, plano free) e `blitz-front` (Static Site).
+3. Preencha no painel as variáveis `sync: false`: em `blitz-api`, `DATABASE_URL` (`jdbc:postgresql://<host>/<db>?sslmode=require`), `DATABASE_USER`, `DATABASE_PASSWORD`, `FRONT_URL` e `APP_URL` (URL pública do `blitz-front`), `ADMIN_EMAIL`; em `blitz-front`, `VITE_API_URL` (URL pública do `blitz-api`). Gemini e SMTP são opcionais.
+4. No primeiro boot o Flyway aplica o schema. Health check: `GET /api/auth/saude`.
+5. Fumaça: `BASE=https://<blitz-api> ./scripts/smoke.sh`.
+
+O plano free dorme a API após inatividade; o primeiro acesso demora alguns segundos. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda testes do back e build do front a cada push/PR.
 
 ### Variáveis de ambiente
 
@@ -63,7 +73,10 @@ Ou tudo via Docker: `docker compose up --build` e abra http://localhost:8080.
 | `IA_RETENCAO_DIAS` | `7` | dias até apagar o conteúdo das conversas com a IA, mantendo só data e tokens (achado IA-02); `0` desliga |
 | `ADMIN_EMAIL` | vazio | e-mail da conta que vira `ADMINISTRADOR` no start ou no cadastro (RN04) |
 | `COOKIE_SECURE` | `false` | `true` em produção (HTTPS) |
-| `APP_URL` | `http://localhost:8080` | base dos links enviados por e-mail (RF03) |
+| `COOKIE_SAMESITE` | `strict` | `none` quando o front é servido de outra origem (Render) |
+| `FRONT_URL` | vazio | origem do front publicado separado, liberada no CORS; vazio = mesma origem |
+| `VITE_API_URL` (front) | vazio | origem da API no build do Static Site; vazio = mesma origem/proxy |
+| `APP_URL` | `http://localhost:8080` | base dos links enviados por e-mail (RF03); em produção, a URL do front |
 | `APP_SECRET` | vazio | assina os tokens de redefinição de senha; vazio = aleatório a cada start (links caem no reinício) |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` | vazio / `587` | SMTP de qualquer provedor (Gmail com senha de app, Brevo, Resend…). Sem `SMTP_HOST`, o link de redefinição vai para o **log** do servidor (só desenvolvimento) |
 | `EMAIL_REMETENTE` | `SMTP_USER` | remetente dos e-mails |

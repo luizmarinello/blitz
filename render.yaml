@@ -1,11 +1,14 @@
-# Blueprint do Render. Banco: Neon (crie o projeto no Neon e cole a URL JDBC em DATABASE_URL).
-# Formato esperado: jdbc:postgresql://<host>/<db>?sslmode=require  (usuário e senha em variáveis separadas)
+# Blueprint do Render: dois serviços (front estático + API em Docker). Banco: Neon.
+# Depois de criar o Blueprint, preencha no painel as variáveis marcadas com sync: false:
+#   blitz-api  -> DATABASE_URL (jdbc:postgresql://<host>/<db>?sslmode=require), DATABASE_USER, DATABASE_PASSWORD,
+#                 FRONT_URL e APP_URL (URL pública do blitz-front), ADMIN_EMAIL; GEMINI_API_KEY e SMTP_* quando houver
+#   blitz-front -> VITE_API_URL (URL pública do blitz-api)
 services:
   - type: web
-    name: blitz
+    name: blitz-api
     runtime: docker
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /api/auth/saude
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -13,7 +16,13 @@ services:
         sync: false
       - key: DATABASE_PASSWORD
         sync: false
-      - key: GEMINI_API_KEY
+      - key: FRONT_URL             # origem liberada no CORS (RN01/RNF04)
+        sync: false
+      - key: COOKIE_SAMESITE       # front em outra origem exige None + Secure
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: GEMINI_API_KEY        # vazio = modo alternativo (RF17)
         sync: false
       - key: GEMINI_MODELO
         value: gemini-2.5-flash
@@ -21,13 +30,11 @@ services:
         value: "20000"
       - key: IA_PSEUDONIMO_SAL
         generateValue: true
-      - key: COOKIE_SECURE
-        value: "true"
       - key: ADMIN_EMAIL           # conta que vira ADMINISTRADOR (RN04)
         sync: false
       - key: IA_RETENCAO_DIAS      # dias até apagar o conteúdo das conversas com a IA (achado IA-02)
         value: "7"
-      # RF03 recuperação de senha: URL pública do app, segredo dos tokens e SMTP do seu provedor
+      # RF03 recuperação de senha: URL pública do front (os links apontam para lá), segredo dos tokens e SMTP
       - key: APP_URL
         sync: false
       - key: APP_SECRET
@@ -41,4 +48,18 @@ services:
       - key: SMTP_PASSWORD
         sync: false
       - key: EMAIL_REMETENTE
+        sync: false
+
+  - type: web
+    name: blitz-front
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL          # URL pública do blitz-api, sem barra no final
         sync: false

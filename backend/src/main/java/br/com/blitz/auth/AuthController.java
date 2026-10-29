@@ -72,6 +72,10 @@ public class AuthController {
                             @NotBlank(message = "Informe a nova senha.") @Size(min = 8, max = 72, message = "A senha precisa ter entre 8 e 72 caracteres.") String novaSenha) {}
 
     /** RF03. Resposta idêntica exista ou não a conta, para não revelar e-mails cadastrados. */
+    /** Health check do Render (RNF08): público e sem banco, responde mesmo com o Neon suspenso. */
+    @GetMapping("/saude")
+    public java.util.Map<String, String> saude() { return java.util.Map.of("status", "ok"); }
+
     @PostMapping("/recuperar")
     public Map<String, String> recuperar(@RequestBody @Validated Recuperar r) {
         usuarios.findByEmailIgnoreCase(r.email().trim()).filter(u -> u.ativo).ifPresent(recuperacao::enviarLink);

@@ -1,4 +1,7 @@
-// Cliente da API. Sessão por cookie (mesma origem); erros vêm como {mensagem, campos?}.
+/// <reference types="vite/client" />
+// Cliente da API. Sessão por cookie; erros vêm como {mensagem, campos?}.
+// VITE_API_URL = origem do back quando o front é publicado separado (Render Static Site); vazio = mesma origem/proxy.
+const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 
 export type Prioridade = 'BAIXA' | 'MEDIA' | 'ALTA';
 export type Status = 'BACKLOG' | 'EM_ANDAMENTO' | 'CONCLUIDA';
@@ -52,11 +55,11 @@ export class ApiErro extends Error {
 async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(caminho, {
+    res = await fetch(BASE + caminho, {
       method: metodo,
       headers: corpo === undefined ? {} : { 'Content-Type': 'application/json' },
       body: corpo === undefined ? undefined : JSON.stringify(corpo),
-      credentials: 'same-origin',
+      credentials: 'include',
     });
   } catch {
     throw new ApiErro(0, 'Sem conexão com o servidor. Verifique sua internet e tente de novo.');

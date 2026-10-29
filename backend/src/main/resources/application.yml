@@ -27,10 +27,11 @@ server:
     cookie:
       name: BLITZ_SESSAO
       http-only: true
-      same-site: strict
+      same-site: ${COOKIE_SAMESITE:strict}   # none quando o front é servido de outra origem (Render Static Site)
       secure: ${COOKIE_SECURE:false}
 
 blitz:
+  front-url: ${FRONT_URL:}       # origem do front publicado separado; vazio = mesma origem, sem CORS
   politica-versao: "1.0"          # RNF-LGPD06: versao gravada em cada consentimento
   admin-email: ${ADMIN_EMAIL:}    # e-mail da conta que vira ADMINISTRADOR (RN04)
   url: ${APP_URL:http://localhost:8080}                 # base dos links enviados por e-mail

@@ -43,6 +43,7 @@ class FluxoPrincipalTest {
         r.add("spring.datasource.password", () -> "postgres");
         r.add("blitz.ia.api-key", () -> "");   // força o caminho alternativo (RF17)
         r.add("blitz.admin-email", () -> EMAIL); // a conta de teste nasce ADMINISTRADOR (RN04)
+        r.add("blitz.front-url", () -> "https://front.teste"); // front publicado em outra origem (Render Static Site)
     }
 
     @Autowired MockMvc mvc;
@@ -57,6 +58,16 @@ class FluxoPrincipalTest {
     }
     private JsonNode corpo(MvcResult r) throws Exception { return json.readTree(r.getResponse().getContentAsString()); }
     private static String j(String s) { return s.replace('\'', '"'); }
+
+    @Test @Order(0) void corsSoAceitaAOrigemDoFront() throws Exception {   // RNF04/RN01: API fechada para outras origens
+        mvc.perform(get("/api/auth/saude")).andExpect(status().isOk());
+        mvc.perform(options("/api/tarefas").header("Origin", "https://front.teste").header("Access-Control-Request-Method", "GET"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Access-Control-Allow-Origin", "https://front.teste"))
+            .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+        mvc.perform(options("/api/tarefas").header("Origin", "https://outro.teste").header("Access-Control-Request-Method", "GET"))
+            .andExpect(status().isForbidden());
+    }
 
     @Test @Order(1) void semLoginRetorna401() throws Exception {
         chamar(get("/api/tarefas"), 401);

@@ -1,11 +1,7 @@
 import { defineConfig } from 'vite';
 
-// Build vai direto para o classpath do Spring: uma origem só, um deploy só.
+// Build vai para dist/ (Render Static Site). Em dev, /api é proxy para o back local.
 export default defineConfig({
-  build: {
-    outDir: '../backend/src/main/resources/static',
-    emptyOutDir: true,
-  },
   server: {
     port: 5173,
     proxy: { '/api': 'http://localhost:8080' },

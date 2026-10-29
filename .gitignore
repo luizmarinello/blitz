@@ -25,3 +25,7 @@ Thumbs.db
 .neon
 .env.local
 node_modules/
+
+# Build do front (publicado pelo Render Static Site)
+frontend/dist/
+dist/
