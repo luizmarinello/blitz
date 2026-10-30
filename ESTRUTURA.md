@@ -15,7 +15,7 @@ Publicar o protótipo Blitz que já existe na branch `main` (Java 21 + Spring Bo
 | Equipe | Equipe T03N toda, com PR para a `main` | Três integrantes vão mexer; a `main` dispara deploy, então muda por PR. |
 | Deploy | **Dois serviços** no Render: Static Site (front) + Web Service Docker (API) | Escolha do usuário. Custo: o front deixa de ser servido pelo Spring e o back precisa de CORS. |
 | Sessão | Cookie HttpOnly com `SameSite=None; Secure` + CORS restrito à URL do front | Menor mudança em relação ao cookie atual (`Strict`). CSRF fica coberto porque a API só aceita JSON e a origem é restrita. |
-| Banco | Neon, projeto `mute-brook-94294275` (São Paulo, Postgres 18); apagar o duplicado `gentle-frost-29029150` | Dois projetos vazios com o mesmo nome confundem. Apagar só com confirmação explícita. Schema entra pelo Flyway no primeiro boot. |
+| Banco | Neon, projeto `BLITZ` (`blue-lab-99145242`, Ohio us-east-2, Postgres 18) na organização do Raphael | Decisão de 30/10/2026: o projeto do Raphael já era o usado pela equipe. Os projetos de São Paulo (`gentle-frost-29029150` em 29/10 e `mute-brook-94294275` em 30/10) foram apagados por estarem vazios. Schema entra pelo Flyway no primeiro boot. |
 | IA e e-mail | Sem chave Gemini e sem SMTP nesta semana | Já existe modo alternativo (RF17) e link de redefinição no log. Ativar depois só trocando variáveis no Render. |
 | Admin | `ADMIN_EMAIL` definido direto no painel do Render | Não entra em código nem em documento (LGPD). |
 | CI | GitHub Actions: testes do back + build do front a cada push/PR | Atende RNF05. O deploy continua sendo o automático do Render. |
@@ -50,11 +50,11 @@ Render Static Site (frontend/dist)  ──fetch + cookie──▶  Render Web Se
         blitz-front.onrender.com                              blitz-api.onrender.com
                                                                       │ JDBC sslmode=require
                                                                       ▼
-                                                          Neon Postgres (mute-brook-94294275)
+                                                          Neon Postgres (blue-lab-99145242, Ohio)
                                                           schema aplicado pelo Flyway (V1 = S3)
-GitHub luizmarinello/blitz (privado)
+GitHub luizmarinello/blitz (público; a decisão original era privado)
    ├─ push/PR → GitHub Actions (mvnw test + npm run build)
-   └─ push na main → Render faz deploy dos dois serviços
+   └─ push na main → Manual Deploy nos dois serviços (criados sem integração GitHub)
 ```
 
 Variáveis novas além das já documentadas no README:
@@ -91,7 +91,7 @@ blitz/
 | 4 | Dockerfile só do back; `render.yaml` com `static` (build `npm ci && npm run build`, publish `frontend/dist`, rewrite `/* → /index.html`) + variáveis novas | `docker build .` conclui |
 | 5 | CI: `.github/workflows/ci.yml` com `mvnw test` e `npm run build` | Workflow verde no primeiro push |
 | 6 | GitHub: `gh repo create luizmarinello/blitz --private`, push da `main`, convidar os dois colegas | `git ls-remote origin` lista `main` |
-| 7 | Neon: apagar `gentle-frost-29029150` **(pede confirmação)**, pegar a connection string do `mute-brook-94294275` | `list_projects` mostra um projeto |
+| 7 | Neon: usar o projeto `BLITZ` da org do Raphael; apagar os de São Paulo **(pede confirmação)** | Feito em 29 e 30/10/2026; `list_projects` na org pessoal não mostra mais nenhum |
 | 8 | Render: criar Blueprint a partir do `render.yaml`, preencher `DATABASE_*`, `FRONT_URL`, `APP_URL`, `ADMIN_EMAIL`, `VITE_API_URL` | Logs do Web Service mostram o Flyway aplicando `V1`; `/` do front abre |
 | 9 | Fumaça: `BASE=<api> ./scripts/smoke.sh` e cadastro + login pelo navegador no front publicado | Fluxo completo sem erro de CORS/cookie |
 | 10 | README: seção "Deploy" com os dois serviços e as variáveis novas | Revisado por outro integrante (Definition of Done) |
