@@ -35,7 +35,11 @@ export function toast(mensagem: string, tipo: 'ok' | 'erro' | 'info' = 'info') {
   el.className = `toast toast-${tipo}`;
   el.textContent = mensagem;
   box.appendChild(el);
-  setTimeout(() => el.remove(), tipo === 'erro' ? 7000 : 4000);
+  setTimeout(() => {
+    el.classList.add('saindo');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+    setTimeout(() => el.remove(), 500);   // garantia caso a animação não dispare
+  }, tipo === 'erro' ? 7000 : 4000);
 }
 
 // ---------- diálogo de confirmação (substitui window.confirm: acessível e com tema) ----------

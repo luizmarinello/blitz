@@ -1,5 +1,6 @@
 // Roteador por hash. Regras de navegação (seção 8): toda tela autenticada a ≤2 passos do painel; nenhuma sem retorno.
 import { api, type Usuario } from './api';
+import { aplicarPrefs, prefsLocais } from './prefs';
 import { html, montar, q, raw, toast } from './ui';
 
 export type Params = Record<string, string>;
@@ -51,9 +52,23 @@ export async function renderizar() {
   montar(app, html`<div class="estado"><strong>Página não encontrada</strong><a href="#/">Voltar ao painel</a></div>`);
 }
 
+// UC12 atalho: alterna claro/escuro (alto contraste continua pela tela de acessibilidade)
+const botaoTema = () => {
+  const escuro = document.documentElement.dataset.theme === 'ESCURO';
+  return html`<button type="button" class="btn-tema" data-tema aria-label="${escuro ? 'Usar tema claro' : 'Usar tema escuro'}" aria-pressed="${escuro}">${escuro ? '\u2600' : '\u263E'}</button>`;
+};
+function ligarBotaoTema(shell: HTMLElement) {
+  q(shell, '[data-tema]').addEventListener('click', () => {
+    const p = { ...prefsLocais(), tema: document.documentElement.dataset.theme === 'ESCURO' ? 'CLARO' as const : 'ESCURO' as const };
+    aplicarPrefs(p);
+    if (estado.usuario) api.salvarPrefs(p).catch(() => undefined);
+    renderizar();
+  });
+}
+
 function casca(caminho: string) {
   const shell = document.getElementById('shell')!;
-  if (!estado.usuario) { shell.innerHTML = ''; return; }
+  if (!estado.usuario) { montar(shell, html`<header class="topbar topbar-min">${botaoTema()}</header>`); ligarBotaoTema(shell); return; }
   const link = (href: string, rotulo: string, ativo: boolean) =>
     html`<a href="${href}" ${ativo ? raw('aria-current="page"') : ''}>${rotulo}</a>`;
   const base = caminho.split('/')[0];
@@ -70,6 +85,7 @@ function casca(caminho: string) {
         ${estado.usuario.papel === 'GESTOR' ? link('#/admin', 'Minha equipe', base === 'admin') : ''}
       </nav>
       <span class="spacer"></span>
+      ${botaoTema()}
       <details class="menu">
         <summary aria-label="Menu da conta de ${estado.usuario.nome}">${estado.usuario.nome.split(' ')[0]} ▾</summary>
         <div class="menu-lista">
@@ -80,6 +96,7 @@ function casca(caminho: string) {
         </div>
       </details>
     </header>`);
+  ligarBotaoTema(shell);
   const menu = q<HTMLDetailsElement>(shell, '.menu');
   document.addEventListener('click', (e) => { if (!menu.contains(e.target as Node)) menu.open = false; }, { once: true });
   q(shell, '[data-sair]').addEventListener('click', async () => {

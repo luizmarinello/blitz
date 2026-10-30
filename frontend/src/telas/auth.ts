@@ -1,6 +1,6 @@
 // Telas 02 Login, 03 Cadastro (com aceite), 04 Recuperação de senha, Termos. UC01, RF01–RF04, RF-LGPD01, RF-LGPD02.
 import { api } from '../api';
-import { aplicarPrefs } from '../prefs';
+import { aplicarPrefs, prefsLocais } from '../prefs';
 import { estado, navegar } from '../router';
 import { dados, html, montar, mostrarErros, q, toast } from '../ui';
 
@@ -100,6 +100,7 @@ export function telaCadastro(root: HTMLElement) {
     btn.disabled = true;
     try {
       estado.usuario = await api.cadastro(d.nome, d.email, d.senha, aceita);
+      await api.salvarPrefs(prefsLocais()).catch(() => undefined);   // RN08: o tema escolhido antes de entrar vale para a conta nova
       toast('Conta criada. Bem-vindo ao Blitz!', 'ok');
       await entrarComPrefs();
     } catch (err) {

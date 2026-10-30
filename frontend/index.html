@@ -15,7 +15,7 @@
       try {
         var p = JSON.parse(localStorage.getItem('blitz.prefs') || '{}');
         var h = document.documentElement;
-        h.dataset.theme = p.tema || 'CLARO';
+        h.dataset.theme = p.tema || (matchMedia('(prefers-color-scheme: dark)').matches ? 'ESCURO' : 'CLARO');
         h.dataset.fonte = p.tamanhoFonte || 'MEDIO';
         if (p.reduzirAnimacoes) h.dataset.motion = 'reduzir';
       } catch (e) {}

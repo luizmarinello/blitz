@@ -56,7 +56,10 @@ html[data-theme="ESCURO"] {
     radial-gradient(60rem 32rem at 12% -8%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 60%),
     radial-gradient(44rem 28rem at 100% 0%, color-mix(in srgb, var(--color-success) 6%, transparent), transparent 60%);
   --primary-tint: color-mix(in srgb, var(--color-primary) 16%, var(--color-bg));
+  --borda-superficie: color-mix(in srgb, var(--color-text) 9%, transparent);
 }
+html[data-theme="ESCURO"] :is(.card, .coluna, .modo, .kpi, .msg-ia, .tarefa) { border-color: var(--borda-superficie); }
+html[data-theme="ESCURO"] .card { background: linear-gradient(180deg, color-mix(in srgb, var(--color-text) 3%, var(--color-surface)), var(--color-surface)); }
 
 html[data-theme="ALTO_CONTRASTE"] {
   --color-bg: #FFFFFF;
@@ -92,9 +95,35 @@ html, body { margin: 0; min-height: 100%; }
 body {
   font-family: var(--font-body); font-size: 1rem; line-height: 1.5;
   color: var(--color-text); background: var(--color-bg);
-  background-image: var(--bg-ambient); background-attachment: fixed; background-repeat: no-repeat;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
+/* ---------- plano de fundo: grade de pontos + halos da marca que derivam devagar ----------
+   Duas camadas fixas atrás de tudo (z-index negativo no contexto raiz). Alto contraste fica chapado; reduzir animações congela os halos. */
+body::before, body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+body::before { background-image: radial-gradient(color-mix(in srgb, var(--color-text) 9%, transparent) 1px, transparent 1.5px);
+  background-size: 1.5rem 1.5rem; mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 75%); -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 75%); }
+body::after { inset: -12%; background-image: var(--bg-ambient); background-repeat: no-repeat; filter: blur(24px);
+  animation: deriva 48s var(--ease) infinite alternate; }
+@keyframes deriva { from { transform: translate3d(-2%, -1%, 0) rotate(-1deg); } to { transform: translate3d(2%, 3%, 0) rotate(1.5deg) scale(1.06); } }
+html[data-theme="ALTO_CONTRASTE"] body::before, html[data-theme="ALTO_CONTRASTE"] body::after { display: none; }
+@media (prefers-reduced-motion: reduce) { body::after { animation: none; } }
+html[data-motion="reduzir"] body::after { animation: none; }
+
+/* ---------- micro-animações de entrada (RA06: zeram com --dur: 0ms) ---------- */
+@keyframes subir { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+@keyframes surgir { from { opacity: 0; transform: translateY(0.4rem) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+main#app > * { animation: subir calc(var(--dur) * 2.5) var(--ease) both; }
+.tarefa, .modo, .kpi { animation: subir calc(var(--dur) * 2) var(--ease) both; }
+.tarefa:nth-child(2), .modo:nth-child(2), .kpi:nth-child(2) { animation-delay: calc(var(--dur) * 0.4); }
+.tarefa:nth-child(3), .modo:nth-child(3), .kpi:nth-child(3) { animation-delay: calc(var(--dur) * 0.8); }
+.tarefa:nth-child(4), .modo:nth-child(4), .kpi:nth-child(4) { animation-delay: calc(var(--dur) * 1.2); }
+.tarefa:nth-child(n+5), .modo:nth-child(n+5), .kpi:nth-child(n+5) { animation-delay: calc(var(--dur) * 1.6); }
+details[open] > .menu-lista { animation: surgir calc(var(--dur) * 1.2) var(--ease) both; transform-origin: top right; }
+dialog[open] { animation: surgir calc(var(--dur) * 1.5) var(--ease) both; }
+dialog[open]::backdrop { animation: aparecer calc(var(--dur) * 1.5) var(--ease) both; }
+.toast.saindo { animation: sair calc(var(--dur) * 1.5) var(--ease) both; }
+@keyframes sair { to { opacity: 0; transform: translateY(0.5rem); } }
 h1, h2, h3 { font-family: var(--font-title); line-height: 1.15; margin: 0 0 var(--space-3); font-weight: 700;
   letter-spacing: -0.02em; text-wrap: balance; }
 h1 { font-size: 2rem; } h2 { font-size: 1.375rem; } h3 { font-size: 1.125rem; letter-spacing: -0.01em; }
@@ -132,6 +161,12 @@ html[data-theme="ALTO_CONTRASTE"] .topbar { background: var(--color-bg); backdro
 .nav a[aria-current="page"]::after { transform: scaleX(1); }
 .nav a:hover { color: var(--color-text); background: var(--color-surface); }
 .topbar .spacer { flex: 1; }
+.topbar-min { border-bottom: 0; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; position: absolute; right: 0; justify-content: flex-end; }
+.btn-tema { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 999px; border: 1px solid var(--color-border-interactive); background: transparent;
+  color: var(--color-text); cursor: pointer; font-size: 1.125rem; display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--dur) var(--ease), transform calc(var(--dur) * 2) var(--ease); }
+.btn-tema:hover { background: var(--color-surface); transform: rotate(-20deg); }
+html[data-motion="reduzir"] .btn-tema:hover { transform: none; }
 .menu { position: relative; }
 .menu { flex: none; }
 .menu summary { list-style: none; cursor: pointer; padding: var(--space-2) var(--space-3); border-radius: 999px; white-space: nowrap;
@@ -285,7 +320,13 @@ html[data-theme="ALTO_CONTRASTE"] .tarefa { border-color: var(--color-border-sub
 .concluida .tarefa-titulo { text-decoration: line-through; color: var(--color-text-muted); }
 
 /* ---------- foco ---------- */
-.timer { text-align: center; padding: var(--space-6) 0; }
+.timer { text-align: center; padding: var(--space-6) 0; position: relative; isolation: isolate; }
+.timer::before { content: ""; position: absolute; inset: 0; margin: auto; width: 20rem; height: 20rem; max-width: 100%; border-radius: 50%; z-index: -1;
+  background: radial-gradient(circle, var(--primary-tint), transparent 68%); animation: respirar 5s ease-in-out infinite; }
+@keyframes respirar { 0%, 100% { transform: scale(0.92); opacity: 0.7; } 50% { transform: scale(1.04); opacity: 1; } }
+html[data-theme="ALTO_CONTRASTE"] .timer::before { display: none; }
+@media (prefers-reduced-motion: reduce) { .timer::before { animation: none; } }
+html[data-motion="reduzir"] .timer::before { animation: none; }
 .timer .tempo { font-family: var(--font-title); font-size: clamp(3.5rem, 14vw, 7rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1;
   font-variant-numeric: tabular-nums; }
 .timer .fase { color: var(--color-text-muted); font-weight: 500; }
