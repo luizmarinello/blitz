@@ -62,7 +62,7 @@ export async function montarChat(el: HTMLElement, compacto: boolean) {
     campo.value = ''; btn.disabled = true; campo.disabled = true;
     try {
       const r = await api.iaMensagem(texto);
-      espera.outerHTML = html`<div class="msg msg-ia ${r.fallback ? 'msg-fallback' : ''}">${r.resposta}${r.fallback ? html`<div class="small" style="margin-top:0.25rem;color:var(--color-warning)">Resposta automática: a IA não respondeu.</div>` : ''}</div>`.s;
+      espera.outerHTML = html`<div class="msg msg-ia ${r.fallback ? 'msg-fallback' : ''}">${r.resposta}${r.fallback && r.limite.configurado ? html`<div class="small" style="margin-top:0.25rem;color:var(--color-warning)">Resposta automática: a IA não respondeu.</div>` : ''}</div>`.s;
       mostrarLimite(r.limite);
     } catch (e) {
       // RNF09: limite atingido não bloqueia o resto do app; só o assistente avisa quando renova

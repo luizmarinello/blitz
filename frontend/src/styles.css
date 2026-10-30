@@ -122,6 +122,8 @@ html[data-theme="ALTO_CONTRASTE"] .topbar { background: var(--color-bg); backdro
 /* em telas estreitas a nav rola na horizontal em vez de empilhar; o foco por teclado traz o item para a vista */
 .nav { display: flex; gap: var(--space-1); flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .nav::-webkit-scrollbar { display: none; }
+/* RNF02: abaixo de 768px a nav desce para uma linha própria, com toda a largura, em vez de esconder itens atrás do menu da conta */
+@media (max-width: 767px) { .topbar { flex-wrap: wrap; row-gap: 0; } .nav { order: 3; flex-basis: 100%; } }
 .nav a { position: relative; white-space: nowrap; text-decoration: none; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
   color: var(--color-text-muted); font-weight: 500; transition: color var(--dur) var(--ease), background var(--dur) var(--ease); }
 .nav a::after { content: ""; position: absolute; left: var(--space-3); right: var(--space-3); bottom: 0.15rem; height: 2px;

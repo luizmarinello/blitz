@@ -1,5 +1,5 @@
 // Telas 13 Privacidade e dados, 14 Exportar dados, 15 Excluir conta. UC11, RF-LGPD02, RF-LGPD03, RF-LGPD04, RN07.
-import { api, type Consentimento } from '../api';
+import { api, baixar, type Consentimento } from '../api';
 import { estado, navegar } from '../router';
 import { carregando, dados, dataHoraBr, html, montar, mostrarErros, q, toast } from '../ui';
 
@@ -50,14 +50,20 @@ export function telaExportar(root: HTMLElement) {
       <div class="card" style="margin-bottom:var(--space-4)">
         <h3>Cópia completa (JSON)</h3>
         <p class="muted small">Conta, consentimentos, preferências, listas, tarefas, modos, sessões de foco e conversas com o assistente. Formato legível por máquina, para portabilidade.</p>
-        <a class="btn" href="/api/privacidade/exportar" download="blitz-meus-dados.json">Baixar JSON</a>
+        <button class="btn" type="button" data-baixar="/api/privacidade/exportar" data-nome="blitz-meus-dados.json">Baixar JSON</button>
       </div>
       <div class="card">
         <h3>Tarefas (CSV)</h3>
         <p class="muted small">Planilha com todas as tarefas, incluindo as concluídas. Abre direto no Excel ou no Google Planilhas.</p>
-        <a class="btn btn-secundario" href="/api/privacidade/exportar.csv" download="blitz-tarefas.csv">Baixar CSV</a>
+        <button class="btn btn-secundario" type="button" data-baixar="/api/privacidade/exportar.csv" data-nome="blitz-tarefas.csv">Baixar CSV</button>
       </div>
     </section>`);
+  root.querySelectorAll<HTMLButtonElement>('[data-baixar]').forEach((b) => b.addEventListener('click', async () => {
+    b.disabled = true;
+    try { await baixar(b.dataset.baixar!, b.dataset.nome!); toast('Arquivo gerado.', 'ok'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Erro ao exportar.', 'erro'); }
+    finally { b.disabled = false; }
+  }));
 }
 
 export function telaExcluirConta(root: HTMLElement) {

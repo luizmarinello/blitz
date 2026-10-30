@@ -2,7 +2,7 @@
 // UC02 (listas e tarefas), RF05–RF08, RN02. Mover por botões = equivalente por teclado do drag and drop (US-02 pendente).
 import { api, type Lista, type Metricas, type Modo, type Sessao, type SprintAtual, type Status, type Tarefa } from '../api';
 import { navegar } from '../router';
-import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar, mostrarErros, q, rotuloPrioridade, rotuloStatus, toast, vazio } from '../ui';
+import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar, mostrarErros, q, raw, rotuloPrioridade, rotuloStatus, toast, vazio } from '../ui';
 import { montarChat } from './assistente';
 import { formTarefa, lerTarefa } from './tarefa';
 
@@ -68,7 +68,7 @@ export async function telaPainel(root: HTMLElement) {
           <span style="flex:1"></span>
           ${listaAtual ? html`
             <button type="button" class="btn btn-fantasma btn-pequeno" data-renomear-lista>Renomear</button>
-            <button type="button" class="btn btn-fantasma btn-pequeno" data-excluir-lista ${listas.length <= 1 ? 'disabled title="Mantenha pelo menos uma lista"' : ''}>Excluir lista</button>
+            <button type="button" class="btn btn-fantasma btn-pequeno" data-excluir-lista ${listas.length <= 1 ? raw('disabled title="Mantenha pelo menos uma lista"') : ''}>Excluir lista</button>
             <button type="button" class="btn" data-nova-tarefa>+ Nova tarefa</button>` : ''}
         </div>
         <div data-quadro></div>

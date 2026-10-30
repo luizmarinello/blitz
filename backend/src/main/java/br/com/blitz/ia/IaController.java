@@ -149,13 +149,15 @@ public class IaController {
         StringBuilder sb = new StringBuilder("O assistente de IA está indisponível no momento. Sugestão automática com base em prazo, prioridade e esforço:\n");
         int i = 1;
         for (Tarefa t : top) {
-            sb.append(i++).append(". ").append(t.titulo).append(" (").append(t.prioridade.name().toLowerCase());
-            if (t.prazo != null) sb.append(", prazo ").append(t.prazo);
+            sb.append(i++).append(". ").append(t.titulo).append(" (prioridade ").append(rotulo(t.prioridade));
+            if (t.prazo != null) sb.append(", prazo ").append(t.prazo.format(DATA_BR));
             sb.append(")\n");
         }
         return sb.toString().trim();
     }
 
+    private static final java.time.format.DateTimeFormatter DATA_BR = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static String rotulo(Prioridade p) { return p == Prioridade.ALTA ? "alta" : p == Prioridade.MEDIA ? "média" : "baixa"; }
     private static int peso(Prioridade p) { return p == Prioridade.ALTA ? 0 : p == Prioridade.MEDIA ? 1 : 2; }
 
     // ---------- limite (RNF09) ----------

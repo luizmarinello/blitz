@@ -1,6 +1,6 @@
 // Roteador por hash. Regras de navegação (seção 8): toda tela autenticada a ≤2 passos do painel; nenhuma sem retorno.
 import { api, type Usuario } from './api';
-import { html, montar, q, toast } from './ui';
+import { html, montar, q, raw, toast } from './ui';
 
 export type Params = Record<string, string>;
 export type Tela = (root: HTMLElement, params: Params) => void | Promise<void>;
@@ -55,7 +55,7 @@ function casca(caminho: string) {
   const shell = document.getElementById('shell')!;
   if (!estado.usuario) { shell.innerHTML = ''; return; }
   const link = (href: string, rotulo: string, ativo: boolean) =>
-    html`<a href="${href}" ${ativo ? 'aria-current="page"' : ''}>${rotulo}</a>`;
+    html`<a href="${href}" ${ativo ? raw('aria-current="page"') : ''}>${rotulo}</a>`;
   const base = caminho.split('/')[0];
   montar(shell, html`
     <header class="topbar">

@@ -14,7 +14,7 @@ Protótipo funcional do TCC da equipe T03N (Luiz Henrique, Vinicius Fagundes e R
 | IA | Google Gemini, chamado **somente pelo servidor** (`GeminiClient`) |
 | Infra | Docker (só a API) · Render (Static Site + Web Service) · Neon (Postgres) · GitHub Actions (CI) |
 
-Em produção o front e a API são dois serviços do Render em origens diferentes: a API libera CORS só para `FRONT_URL` e o cookie de sessão usa `SameSite=None; Secure`. Em desenvolvimento o Vite faz proxy de `/api` para o back local, então não há CORS.
+Em produção o front e a API são dois serviços do Render em origens diferentes: a API libera CORS só para `FRONT_URL` e o cookie de sessão usa `SameSite=None; Secure`. Em desenvolvimento o Vite faz proxy de `/api` para o back local (`API_PROXY=http://localhost:8090 npm run dev` aponta para outra porta), então não há CORS.
 
 ## Rodar localmente
 
@@ -58,7 +58,7 @@ Ou a API via Docker: `docker compose up --build` (porta 8080); o front em dev ap
 4. No primeiro boot o Flyway aplica o schema. Health check: `GET /api/auth/saude`.
 5. Fumaça: `BASE=https://<blitz-api> ./scripts/smoke.sh`.
 
-O plano free dorme a API após inatividade; o primeiro acesso demora alguns segundos. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda testes do back e build do front a cada push/PR.
+O plano free dorme a API após inatividade; o primeiro acesso demora alguns segundos. Se os serviços foram criados por "Public Git Repository" (sem a integração do Render com o GitHub), **não há deploy automático**: a cada push na `main` é preciso clicar em *Manual Deploy* nos dois serviços, ou conectar o GitHub em *Account Settings → Git Providers*. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda testes do back e build do front a cada push/PR.
 
 ### Variáveis de ambiente
 
@@ -91,13 +91,6 @@ cd backend && ./mvnw test
 Um único teste de integração (`FluxoPrincipalTest`) sobe um **PostgreSQL real embutido** (sem Docker), aplica o schema via Flyway e percorre o fluxo principal: cadastro com aceite, tarefas e restrição `ck_tarefa_conclusao`, modos, sessão de foco (`RESTRICT` no modo, `SET NULL` na tarefa), IA em modo alternativo, acessibilidade, exportação e exclusão por anonimização.
 
 Há também um teste de fumaça por `curl` contra um servidor rodando: `BASE=http://localhost:8080 ./scripts/smoke.sh`.
-
-## Deploy (Render + Neon)
-
-1. Crie um projeto no [Neon](https://neon.tech) e anote host, banco, usuário e senha.
-2. No Render, crie um **Blueprint** apontando para este repositório (`render.yaml`) ou um Web Service Docker.
-3. Preencha `DATABASE_URL` (formato JDBC acima), `DATABASE_USER`, `DATABASE_PASSWORD` e `GEMINI_API_KEY`.
-4. O Flyway cria o schema no primeiro start.
 
 ## API (resumo)
 

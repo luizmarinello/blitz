@@ -74,6 +74,16 @@ async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Prom
   return dados as T;
 }
 
+/** Baixa um arquivo autenticado da API. Link direto não serve: o front e a API são origens diferentes (o cookie e o atributo download não cruzam). */
+export async function baixar(caminho: string, nomeArquivo: string) {
+  const res = await fetch(BASE + caminho, { credentials: 'include' });
+  if (!res.ok) throw new ApiErro(res.status, res.status === 401 ? 'Sessão expirada. Entre de novo.' : 'Não foi possível gerar o arquivo.');
+  const url = URL.createObjectURL(await res.blob());
+  const a = Object.assign(document.createElement('a'), { href: url, download: nomeArquivo });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
   // UC01
   me: () => chamar<Usuario>('GET', '/api/auth/me'),
