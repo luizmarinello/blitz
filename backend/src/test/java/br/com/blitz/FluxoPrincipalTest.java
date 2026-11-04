@@ -126,10 +126,17 @@ class FluxoPrincipalTest {
     }
 
     @Test @Order(7) void iaSemChaveRespondeComAlternativa() throws Exception {
+        JsonNode nova = corpo(chamar(post("/api/listas/" + listaId + "/tarefas").contentType(MediaType.APPLICATION_JSON)
+            .content(j("{'titulo':'Tarefa para a IA','prioridade':'ALTA'}")), 201));
+        long idIa = nova.get("id").asLong();
         mvc.perform(post("/api/ia/mensagem").session(SESSAO).contentType(MediaType.APPLICATION_JSON).content(j("{'mensagem':'O que fazer agora?'}")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.fallback").value(true))
-            .andExpect(jsonPath("$.resposta", containsString("indisponível")));
+            .andExpect(jsonPath("$.resposta", containsString("indisponível")))
+            .andExpect(jsonPath("$.tarefasSugeridas[0]").value(idIa));          // RF16: ordem sugerida vem como ids
+        chamar(patch("/api/tarefas/ordem").contentType(MediaType.APPLICATION_JSON).content("{\"ids\":[" + idIa + "]}"), 204);
+        mvc.perform(get("/api/tarefas").session(SESSAO)).andExpect(jsonPath("$[0].id").value(idIa));
+        chamar(delete("/api/tarefas/" + idIa), 204);   // não pode sobrar para o teste da sprint
         mvc.perform(get("/api/ia/limite").session(SESSAO)).andExpect(jsonPath("$.maximo").value(20000));
     }
 

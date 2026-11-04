@@ -1,5 +1,6 @@
 // Tela 09 Assistente de IA (e versão compacta no painel). UC04, RF15, RF16, RF17, RNF09.
 import { api, ApiErro, type Conversa, type LimiteIa } from '../api';
+import { navegar } from '../router';
 import { carregando, dataHoraBr, html, montar, q, toast } from '../ui';
 
 const SUGESTOES = ['O que devo fazer agora?', 'Ordene minhas tarefas por urgência', 'Qual tarefa posso terminar em menos de 1 hora?'];
@@ -14,7 +15,8 @@ export async function telaAssistente(root: HTMLElement) {
   await montarChat(q(root, '[data-chat]'), false);
 }
 
-export async function montarChat(el: HTMLElement, compacto: boolean) {
+/** aoOrdenar: quem monta o chat dentro do painel passa um callback para redesenhar o quadro depois de aplicar a ordem. */
+export async function montarChat(el: HTMLElement, compacto: boolean, aoOrdenar?: () => void) {
   montar(el, carregando('Abrindo o assistente…'));
   let historico: Conversa[] = [], limite: LimiteIa | null = null;
   try { [historico, limite] = await Promise.all([api.iaHistorico(), api.iaLimite()]); }
@@ -62,8 +64,21 @@ export async function montarChat(el: HTMLElement, compacto: boolean) {
     campo.value = ''; btn.disabled = true; campo.disabled = true;
     try {
       const r = await api.iaMensagem(texto);
-      espera.outerHTML = html`<div class="msg msg-ia ${r.fallback ? 'msg-fallback' : ''}">${r.resposta}${r.fallback && r.limite.configurado ? html`<div class="small" style="margin-top:0.25rem;color:var(--color-warning)">Resposta automática: a IA não respondeu.</div>` : ''}</div>`.s;
+      espera.outerHTML = html`<div class="msg msg-ia ${r.fallback ? 'msg-fallback' : ''}">${r.resposta}${r.fallback && r.limite.configurado ? html`<div class="small" style="margin-top:0.25rem;color:var(--color-warning)">Resposta automática: a IA não respondeu.</div>` : ''}</div>
+        ${r.tarefasSugeridas?.length ? html`<div class="msg-acoes">
+          <button class="btn btn-pequeno" type="button" data-focar="${r.tarefasSugeridas[0]}">▶ Focar na primeira agora</button>
+          <button class="btn btn-secundario btn-pequeno" type="button" data-ordenar="${r.tarefasSugeridas.join(',')}">Aplicar ordem no quadro</button>
+        </div>` : ''}`.s;
       mostrarLimite(r.limite);
+      // RF16: a sugestão vira ação, não só texto
+      const acoes = msgs.lastElementChild;   // o bloco de ações recém-inserido (quando há sugestões)
+      acoes?.querySelector<HTMLButtonElement>('[data-focar]')?.addEventListener('click', (ev) => navegar(`#/foco?tarefa=${(ev.currentTarget as HTMLElement).dataset.focar}`));
+      acoes?.querySelector<HTMLButtonElement>('[data-ordenar]')?.addEventListener('click', async (ev) => {
+        const b = ev.currentTarget as HTMLButtonElement;
+        b.disabled = true;
+        try { await api.ordenarTarefas(b.dataset.ordenar!.split(',').map(Number)); toast('Ordem aplicada no quadro.', 'ok'); b.textContent = 'Ordem aplicada'; aoOrdenar?.(); }
+        catch (e) { toast(e instanceof Error ? e.message : 'Erro ao ordenar.', 'erro'); b.disabled = false; }
+      });
     } catch (e) {
       // RNF09: limite atingido não bloqueia o resto do app; só o assistente avisa quando renova
       const msg = e instanceof ApiErro ? e.message : 'Não foi possível falar com o assistente.';

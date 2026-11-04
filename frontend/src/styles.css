@@ -434,6 +434,7 @@ html[data-motion="reduzir"] .timer::before { animation: none; }
 .msg-ia { align-self: flex-start; background: var(--color-surface); border: 1px solid transparent; border-bottom-left-radius: var(--radius-sm); }
 html[data-theme="ALTO_CONTRASTE"] .msg-ia { border-color: var(--color-border-subtle); }
 .msg-fallback { border-color: var(--color-warning); }
+.msg-acoes { display: flex; gap: var(--space-2); flex-wrap: wrap; align-self: flex-start; max-width: 88%; animation: entrar calc(var(--dur) * 1.5) var(--ease) both; }
 .chat form { display: flex; gap: var(--space-2); }
 .chat form textarea { flex: 1; min-height: 2.75rem; padding: 0.625rem var(--space-3); border-radius: var(--radius-md);
   border: 1px solid var(--color-border-interactive); background: var(--color-bg); resize: vertical; }

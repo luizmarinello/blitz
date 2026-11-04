@@ -321,7 +321,7 @@ export async function telaPainel(root: HTMLElement) {
     navegar(`#/foco?modo=${q<HTMLSelectElement>(root, '#w-modo').value}&iniciar=1`);
   });
   const chat = root.querySelector<HTMLElement>('[data-chat]');
-  if (chat) montarChat(chat, true);
+  if (chat) montarChat(chat, true, () => telaPainel(root));
 
   // gaveta do assistente (telas < 1440px): monta o chat só na primeira abertura; Esc fecha e devolve o foco ao botão
   const fab = q<HTMLButtonElement>(root, '[data-abrir-assistente]');
@@ -330,7 +330,7 @@ export async function telaPainel(root: HTMLElement) {
   const fecharGaveta = () => { gaveta.hidden = true; fab.setAttribute('aria-expanded', 'false'); fab.focus(); };
   fab.addEventListener('click', () => {
     gaveta.hidden = false; fab.setAttribute('aria-expanded', 'true');
-    if (!chatMontado) { chatMontado = true; montarChat(q(gaveta, '[data-chat-gaveta]'), true); }
+    if (!chatMontado) { chatMontado = true; montarChat(q(gaveta, '[data-chat-gaveta]'), true, () => telaPainel(root)); }
     q(gaveta, '[data-fechar-assistente]').focus();
   });
   q(gaveta, '[data-fechar-assistente]').addEventListener('click', fecharGaveta);

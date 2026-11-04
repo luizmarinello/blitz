@@ -36,6 +36,7 @@ public class QuadroController {
         Long listaId) {}
 
     public record StatusEntrada(@NotNull StatusTarefa status) {}
+    public record OrdemEntrada(@NotNull List<Long> ids) {}
 
     // ---------- listas ----------
 
@@ -92,6 +93,16 @@ public class QuadroController {
         Tarefa t = minhaTarefa(ua, id);
         t.mudarStatus(e.status());
         return tarefas.save(t);
+    }
+
+    /** RF16: aplica no quadro a ordem sugerida pelo assistente. As tarefas informadas vão para o topo (posição 1..n) das suas listas; as demais ficam depois. */
+    @PatchMapping("/tarefas/ordem") @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void ordenarTarefas(@AuthenticationPrincipal UsuarioAutenticado ua, @RequestBody @Validated OrdemEntrada e) {
+        List<Tarefa> todas = tarefas.todasDoUsuario(ua.id());
+        int pos = 1;
+        for (Long id : e.ids()) for (Tarefa t : todas) if (t.id.equals(id)) t.posicao = pos++;
+        for (Tarefa t : todas) if (!e.ids().contains(t.id)) t.posicao = pos++;
+        tarefas.saveAll(todas);
     }
 
     @DeleteMapping("/tarefas/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)

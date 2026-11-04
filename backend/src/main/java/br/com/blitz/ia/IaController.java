@@ -82,6 +82,7 @@ public class IaController {
         String resposta;
         int tokens = 0;
         boolean fallback = false;
+        List<Long> sugeridas = List.of();   // ids das tarefas na ordem sugerida: o front oferece "Focar na primeira" e "Aplicar ordem no quadro"
         try {
             List<GeminiClient.Turno> hist = new ArrayList<>();
             for (Map<String, Object> h : historico(ua)) {
@@ -91,13 +92,15 @@ public class IaController {
             }
             if (hist.size() > 8) hist = hist.subList(hist.size() - 8, hist.size());
             GeminiClient.Resposta r = gemini.gerar(instrucao(pendentes), hist, m.mensagem());
-            resposta = r.texto();
+            sugeridas = extrairOrdem(r.texto(), pendentes);
+            resposta = ORDEM.matcher(r.texto()).replaceAll("").strip();   // a linha ORDEM é só para o front, não para a pessoa
             tokens = r.tokens();
             registrar(ua.id(), tokens, inicio, "OK");
         } catch (Exception e) {
             // RF17 / achado IA-04: provedor indisponível => resposta alternativa determinística. Log só com a classe do erro.
             fallback = true;
             resposta = respostaAlternativa(pendentes);
+            sugeridas = ordenadas(pendentes).stream().limit(5).map(t -> t.id).toList();
             registrar(ua.id(), 0, inicio, "FALLBACK:" + e.getClass().getSimpleName());
         }
 
@@ -112,6 +115,7 @@ public class IaController {
         corpo.put("resposta", resposta);
         corpo.put("tokensUsados", tokens);
         corpo.put("fallback", fallback);
+        corpo.put("tarefasSugeridas", sugeridas);
         corpo.put("limite", limiteDe(ua.id()));
         return ResponseEntity.ok(corpo);
     }
@@ -123,11 +127,12 @@ public class IaController {
             Você é o assistente do Blitz, um app de foco e produtividade. Responda sempre em português do Brasil, de forma direta e curta.
             Sua função principal é ajudar a pessoa a decidir o que fazer AGORA, ordenando as tarefas pendentes por prazo, prioridade e esforço.
             Quando sugerir ordem, liste no máximo 5 itens numerados e explique cada escolha em uma frase.
+            Nesse caso, termine a resposta com uma última linha no formato exato "ORDEM: 12,7,3", com os ids [#id] das tarefas na ordem sugerida, sem comentar essa linha.
             Não invente tarefas: use apenas as listadas abaixo. Se não houver tarefas, sugira cadastrar a primeira.
             Hoje é """).append(LocalDate.now()).append(".\n\nTarefas pendentes:\n");
         if (pendentes.isEmpty()) sb.append("(nenhuma)\n");
         for (Tarefa t : pendentes) {
-            sb.append("- ").append(t.titulo)
+            sb.append("- [#").append(t.id).append("] ").append(t.titulo)
               .append(" | prioridade ").append(t.prioridade)
               .append(" | status ").append(t.status)
               .append(t.prazo == null ? "" : " | prazo " + t.prazo)
@@ -138,14 +143,32 @@ public class IaController {
     }
 
     /** RF17: ordenação determinística (prazo mais próximo, prioridade mais alta, menor esforço). Também cobre RF16 sem IA. */
-    static String respostaAlternativa(List<Tarefa> pendentes) {
-        if (pendentes.isEmpty())
-            return "O assistente de IA está indisponível no momento. Você ainda não tem tarefas pendentes: cadastre a primeira no quadro e eu ajudo a priorizar.";
+    static List<Tarefa> ordenadas(List<Tarefa> pendentes) {
         Comparator<Tarefa> ordem = Comparator
             .comparing((Tarefa t) -> t.prazo, Comparator.nullsLast(Comparator.naturalOrder()))
             .thenComparing(t -> peso(t.prioridade))
             .thenComparing(t -> t.horasEstimadas, Comparator.nullsLast(Comparator.naturalOrder()));
-        List<Tarefa> top = pendentes.stream().sorted(ordem).limit(5).toList();
+        return pendentes.stream().sorted(ordem).toList();
+    }
+
+    /** Linha "ORDEM: 12,7,3" (ou "#12, #7") no fim da resposta do modelo; só ids de tarefas pendentes da pessoa valem. */
+    static final java.util.regex.Pattern ORDEM = java.util.regex.Pattern.compile("(?mi)^\\s*ORDEM:\\s*([\\d,#\\s]+)\\s*$");
+    static List<Long> extrairOrdem(String texto, List<Tarefa> pendentes) {
+        var m = ORDEM.matcher(texto);
+        if (!m.find()) return List.of();
+        Set<Long> validos = new HashSet<>(); pendentes.forEach(t -> validos.add(t.id));
+        List<Long> ids = new ArrayList<>();
+        for (String s : m.group(1).replace("#", "").split("[,\\s]+")) {
+            if (s.isBlank()) continue;
+            try { long id = Long.parseLong(s); if (validos.contains(id) && !ids.contains(id)) ids.add(id); } catch (NumberFormatException ignorada) { /* texto que não é id */ }
+        }
+        return ids;
+    }
+
+    static String respostaAlternativa(List<Tarefa> pendentes) {
+        if (pendentes.isEmpty())
+            return "O assistente de IA está indisponível no momento. Você ainda não tem tarefas pendentes: cadastre a primeira no quadro e eu ajudo a priorizar.";
+        List<Tarefa> top = ordenadas(pendentes).stream().limit(5).toList();
         StringBuilder sb = new StringBuilder("O assistente de IA está indisponível no momento. Sugestão automática com base em prazo, prioridade e esforço:\n");
         int i = 1;
         for (Tarefa t : top) {

@@ -26,7 +26,7 @@ export interface Metricas {
 }
 export interface Prefs { tema: Tema; tamanhoFonte: TamanhoFonte; reduzirAnimacoes: boolean; leitorTela: boolean }
 export interface LimiteIa { usados: number; maximo: number; renovaEm: string; configurado: boolean }
-export interface RespostaIa { resposta: string; tokensUsados: number; fallback: boolean; limite: LimiteIa }
+export interface RespostaIa { resposta: string; tokensUsados: number; fallback: boolean; tarefasSugeridas: number[]; limite: LimiteIa }
 export interface Conversa { id: number; mensagem: string; resposta?: string; dataHora: string }
 export interface Consentimento { id: number; versaoPolitica: string; aceitoEm: string; canal: string; finalidade: string }
 export interface Sprint { id: number; dataInicio: string; dataFim: string; geradaPorIa: boolean }
@@ -105,6 +105,7 @@ export const api = {
   editarTarefa: (id: number, t: TarefaEntrada) => chamar<Tarefa>('PUT', `/api/tarefas/${id}`, t),
   mudarStatus: (id: number, status: Status) => chamar<Tarefa>('PATCH', `/api/tarefas/${id}/status`, { status }),
   excluirTarefa: (id: number) => chamar<void>('DELETE', `/api/tarefas/${id}`),
+  ordenarTarefas: (ids: number[]) => chamar<void>('PATCH', '/api/tarefas/ordem', { ids }),
 
   // UC05
   modos: () => chamar<Modo[]>('GET', '/api/modos'),
