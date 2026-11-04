@@ -113,22 +113,28 @@ export async function telaPainel(root: HTMLElement) {
       return;
     }
     const d = hoje();
+    // RF16: mesmo critério da resposta alternativa do assistente (prazo, prioridade, esforço) escolhe o cartão "Comece por aqui"
+    const peso: Record<string, number> = { ALTA: 0, MEDIA: 1, BAIXA: 2 };
+    const recomendada = daLista.filter((t) => t.status !== 'CONCLUIDA').sort((a, b) =>
+      (a.prazo ?? '9999').localeCompare(b.prazo ?? '9999') || peso[a.prioridade] - peso[b.prioridade] || (a.horasEstimadas ?? 1e9) - (b.horasEstimadas ?? 1e9))[0]?.id;
+    const simbolo: Record<Status, string> = { BACKLOG: '○', EM_ANDAMENTO: '◐', CONCLUIDA: '✓' };   // RA07: status com símbolo, não só cor
     montar(quadro, html`
       <p class="muted small" id="dica-quadro">Arraste os cartões entre as colunas ou use os botões de seta de cada cartão (teclado).</p>
       <div class="colunas">${STATUS.map((s) => {
       const itens = daLista.filter((t) => t.status === s);
       return html`
-        <section class="coluna" aria-labelledby="col-${s}" data-status="${s}">
-          <h3 id="col-${s}">${rotuloStatus[s]} <span class="contador">${itens.length}</span></h3>
+        <section class="coluna coluna-${s}" aria-labelledby="col-${s}" data-status="${s}">
+          <h3 id="col-${s}"><span><span class="status-icone" aria-hidden="true">${simbolo[s]}</span>${rotuloStatus[s]}</span><span class="contador">${itens.length}</span></h3>
           <ul class="tarefas">
             ${itens.length === 0 ? html`<li class="muted small" style="padding:var(--space-2)">Nada aqui.</li>` : ''}
             ${itens.map((t) => {
               const i = STATUS.indexOf(t.status);
               const atrasada = t.prazo && t.prazo < d && t.status !== 'CONCLUIDA';
               return html`
-                <li class="tarefa ${t.status === 'CONCLUIDA' ? 'concluida' : ''}" draggable="true" data-id="${t.id}" aria-describedby="dica-quadro">
+                <li class="tarefa prio-${t.prioridade} ${t.status === 'CONCLUIDA' ? 'concluida' : ''} ${t.id === recomendada ? 'destaque' : ''}" draggable="true" data-id="${t.id}" aria-describedby="dica-quadro">
                   <a class="tarefa-titulo" href="#/tarefas/${t.id}">${t.titulo}</a>
                   <div class="tarefa-meta">
+                    ${t.id === recomendada ? html`<span class="chip chip-destaque" title="Sugestão por prazo, prioridade e esforço">⚡ Comece por aqui</span>` : ''}
                     <span class="chip chip-${t.prioridade}">${rotuloPrioridade[t.prioridade]}</span>
                     ${sprint && t.sprintId === sprint.sprint.id && t.status !== 'CONCLUIDA' ? html`<span class="chip chip-neutro" title="Na sprint desta semana">⚑ Sprint</span>` : ''}
                     ${t.prazo ? html`<span class="${atrasada ? 'atrasada' : ''}">${atrasada ? '⚠ Atrasada · ' : 'Prazo '}${dataBr(t.prazo)}</span>` : ''}
