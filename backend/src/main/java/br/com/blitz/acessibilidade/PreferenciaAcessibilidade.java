@@ -10,7 +10,7 @@ import org.hibernate.type.SqlTypes;
 @Entity @Table(name = "preferencia_acessibilidade")
 public class PreferenciaAcessibilidade {
     @Id @JsonIgnore @Column(name = "usuario_id") public Long usuarioId;
-    @Enumerated(EnumType.STRING) @JdbcTypeCode(SqlTypes.NAMED_ENUM) public Tema tema = Tema.CLARO;
+    @Enumerated(EnumType.STRING) @JdbcTypeCode(SqlTypes.NAMED_ENUM) public Tema tema = Tema.ESCURO;   // identidade da marca; a pessoa troca em Acessibilidade
     @Enumerated(EnumType.STRING) @JdbcTypeCode(SqlTypes.NAMED_ENUM) @Column(name = "tamanho_fonte") public TamanhoFonte tamanhoFonte = TamanhoFonte.MEDIO;
     @Column(name = "reduzir_animacoes") public boolean reduzirAnimacoes;
     @Column(name = "leitor_tela") public boolean leitorTela;

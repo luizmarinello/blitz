@@ -142,20 +142,25 @@ Todos os valores abaixo tiveram o contraste **calculado e verificado** pela fór
 --color-danger:            #C0261F  /* 5.94:1 */
 ```
 
-### Tema escuro
+### Tema escuro (padrão: identidade da marca, preto + azul-marinho)
+
+Contrastes recalculados em 04/11/2026 (sobre o fundo / sobre a superfície).
 
 ```css
---color-bg:                #12141A
---color-surface:           #1C2029
---color-border-subtle:     #2E343F
---color-border-interactive:#66707E  /* 3.67:1 */
---color-text:              #EEF1F6  /* 16.26:1 */
---color-text-muted:        #A3ACBA  /* 8.04:1 */
---color-primary:           #8A94FF  /* 6.80:1 */
---color-success:           #4ADE80  /* 10.56:1 */
---color-warning:           #F2B44D  /* 10.00:1 */
---color-danger:            #FF6B60  /* 6.60:1 */
+--color-bg:                #0B0D14
+--color-surface:           #121A33
+--color-border-subtle:     #232C47
+--color-border-interactive:#66707E  /* 3.87:1 / 3.43:1 */
+--color-text:              #EEF1F6  /* 17.14:1 / 15.19:1 */
+--color-text-muted:        #A3ACBA  /* 8.47:1 / 7.51:1 */
+--color-primary:           #8A94FF  /* 7.17:1 / 6.35:1 */
+--color-success:           #4ADE80  /* 11.14:1 / 9.87:1 */
+--color-warning:           #F2B44D  /* 10.55:1 / 9.34:1 */
+--color-danger:            #FF6B60  /* 6.95:1 / 6.16:1 */
+--color-accent:            #FFD23F  /* raio da logo; logotipo é isento de contraste (WCAG 1.4.3/1.4.11). No claro leva contorno; no alto contraste vira #7A5C00 (6.5:1) */
 ```
+
+**Logo:** "Blit" + raio amarelo no lugar do Z (`logo()`/`raio()` em `ui.ts`), sem ponto. Favicon: raio amarelo em quadrado azul-marinho.
 
 ### Alto contraste
 

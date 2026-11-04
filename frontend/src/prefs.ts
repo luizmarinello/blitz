@@ -2,7 +2,7 @@
 import type { Prefs } from './api';
 
 const CHAVE = 'blitz.prefs';
-export const PREFS_PADRAO: Prefs = { tema: 'CLARO', tamanhoFonte: 'MEDIO', reduzirAnimacoes: false, leitorTela: false };
+export const PREFS_PADRAO: Prefs = { tema: 'ESCURO', tamanhoFonte: 'MEDIO', reduzirAnimacoes: false, leitorTela: false };
 
 export function aplicarPrefs(p: Prefs) {
   const h = document.documentElement;

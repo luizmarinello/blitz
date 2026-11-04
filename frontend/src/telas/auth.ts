@@ -2,7 +2,7 @@
 import { api } from '../api';
 import { aplicarPrefs, prefsLocais } from '../prefs';
 import { estado, navegar } from '../router';
-import { dados, html, montar, mostrarErros, q, toast } from '../ui';
+import { dados, html, logo, montar, mostrarErros, q, toast } from '../ui';
 
 export const VERSAO_POLITICA = '1.0';
 
@@ -14,7 +14,7 @@ async function entrarComPrefs() {
 export function telaLogin(root: HTMLElement) {
   montar(root, html`
     <section class="auth card">
-      <a class="logo" href="#/login">Blitz<span>.</span></a>
+      ${logo('#/login')}
       <h1>Entrar</h1>
       <p class="muted small" style="text-align:center">O aplicativo que decide com você o que fazer agora.</p>
       <form novalidate>
@@ -54,7 +54,7 @@ export function telaLogin(root: HTMLElement) {
 export function telaCadastro(root: HTMLElement) {
   montar(root, html`
     <section class="auth card">
-      <a class="logo" href="#/login">Blitz<span>.</span></a>
+      ${logo('#/login')}
       <h1>Criar conta</h1>
       <form novalidate>
         <p class="erro" data-erro-geral role="alert"></p>
@@ -114,7 +114,7 @@ export function telaCadastro(root: HTMLElement) {
 export function telaRecuperar(root: HTMLElement) {
   montar(root, html`
     <section class="auth card">
-      <a class="logo" href="#/login">Blitz<span>.</span></a>
+      ${logo('#/login')}
       <h1>Recuperar senha</h1>
       <p class="muted small" style="text-align:center">Informe o e-mail da conta. Enviaremos um link válido por 1 hora.</p>
       <form novalidate>
@@ -137,7 +137,7 @@ export function telaRecuperar(root: HTMLElement) {
       const r = await api.recuperar(dados(form).email);
       montar(root, html`
         <section class="auth card">
-          <a class="logo" href="#/login">Blitz<span>.</span></a>
+          ${logo('#/login')}
           <h1>Verifique seu e-mail</h1>
           <div class="alerta alerta-ok" role="status">${r.mensagem}</div>
           <p class="muted small">Não chegou? Confira a caixa de spam ou <a href="#/recuperar">peça outro link</a>.</p>
@@ -157,7 +157,7 @@ export function telaRedefinir(root: HTMLElement, params: Record<string, string>)
   }
   montar(root, html`
     <section class="auth card">
-      <a class="logo" href="#/login">Blitz<span>.</span></a>
+      ${logo('#/login')}
       <h1>Nova senha</h1>
       <form novalidate>
         <p class="erro" data-erro-geral role="alert"></p>
