@@ -345,6 +345,13 @@ dialog::backdrop { background: rgba(12, 14, 24, 0.55); backdrop-filter: blur(4px
 html[data-theme="ALTO_CONTRASTE"] .abas button { border-color: var(--color-border-interactive); }
 html[data-theme="ALTO_CONTRASTE"] .abas button[aria-selected="true"] { background: var(--color-primary); color: var(--color-on-primary); }
 
+/* entrada rápida acima do quadro */
+.entrada-rapida { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; margin-bottom: var(--space-4); }
+.entrada-rapida input { flex: 1 1 20rem; min-height: 2.75rem; padding: 0.625rem var(--space-3); border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-interactive); background: var(--color-bg); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.entrada-rapida input:focus-visible { outline-offset: 0; }
+.entrada-rapida .small { flex-basis: 100%; }
+.entrada-rapida code { font-family: inherit; background: var(--color-surface); padding: 0 0.35rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); }
 .colunas { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); align-items: start; }
 .coluna { background: var(--color-surface); border-radius: var(--radius-lg); padding: var(--space-3); border: 1px solid transparent;
   transition: outline-color var(--dur) var(--ease), background var(--dur) var(--ease); }

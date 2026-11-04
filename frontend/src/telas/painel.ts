@@ -5,6 +5,7 @@ import { navegar } from '../router';
 import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar, mostrarErros, q, raw, rotuloPrioridade, rotuloStatus, toast, vazio } from '../ui';
 import { montarChat } from './assistente';
 import { formTarefa, lerTarefa } from './tarefa';
+import { interpretarRapida } from '../rapida';
 
 const STATUS: Status[] = ['BACKLOG', 'EM_ANDAMENTO', 'CONCLUIDA'];
 let listaAtual: number | null = Number(sessionStorage.getItem('blitz.lista')) || null;
@@ -71,6 +72,13 @@ export async function telaPainel(root: HTMLElement) {
             <button type="button" class="btn btn-fantasma btn-pequeno" data-excluir-lista ${listas.length <= 1 ? raw('disabled title="Mantenha pelo menos uma lista"') : ''}>Excluir lista</button>
             <button type="button" class="btn" data-nova-tarefa>+ Nova tarefa</button>` : ''}
         </div>
+        ${listaAtual ? html`
+          <form class="entrada-rapida" data-rapida novalidate>
+            <input name="texto" aria-label="Adicionar tarefa rápida" aria-describedby="dica-rapida" autocomplete="off" maxlength="200"
+              placeholder="Adicionar tarefa… ex.: Revisar slides !alta @sexta 2h" />
+            <button class="btn btn-pequeno" type="submit">Adicionar</button>
+            <span class="small muted" id="dica-rapida">Enter cria na hora. Atalhos: <code>!alta</code> <code>!baixa</code> prioridade · <code>@hoje</code> <code>@amanhã</code> <code>@sexta</code> <code>@25/11</code> prazo · <code>2h</code> horas estimadas</span>
+          </form>` : ''}
         <div data-quadro></div>
       </section>
 
@@ -246,6 +254,25 @@ export async function telaPainel(root: HTMLElement) {
       desenharQuadro();
       toast('Tarefa criada.', 'ok');
     } catch (err) { mostrarErros(formTarefaEl, err); }
+  });
+
+  // ---------- entrada rápida (RF06) ----------
+  root.querySelector<HTMLFormElement>('[data-rapida]')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const campo = q<HTMLInputElement>(form, 'input');
+    const entrada = interpretarRapida(campo.value);
+    if (!entrada || !listaAtual) { campo.focus(); return; }
+    const btn = q<HTMLButtonElement>(form, 'button');
+    btn.disabled = true;
+    try {
+      const nova = await api.criarTarefa(listaAtual, entrada);
+      tarefas.push(nova);
+      campo.value = '';
+      desenharQuadro();
+      toast(`Criada: ${nova.titulo} · ${rotuloPrioridade[nova.prioridade]}${nova.prazo ? ` · prazo ${dataBr(nova.prazo)}` : ''}${nova.horasEstimadas ? ` · ${nova.horasEstimadas}h` : ''}`, 'ok');
+    } catch (err) { toast(err instanceof Error ? err.message : 'Erro ao criar.', 'erro'); }
+    finally { btn.disabled = false; campo.focus(); }
   });
 
   // ---------- listas ----------
