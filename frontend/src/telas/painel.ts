@@ -1,6 +1,6 @@
 // Tela 05 Painel principal: widgets | quadro | assistente (≥1280px). Só o quadro fica visível em larguras menores.
 // UC02 (listas e tarefas), RF05–RF08, RN02. Mover por botões = equivalente por teclado do drag and drop (US-02 pendente).
-import { api, type Lista, type Metricas, type Modo, type Sessao, type SprintAtual, type Status, type Tarefa } from '../api';
+import { api, type Lista, type Metricas, type Modo, type Sessao, type SprintAtual, type Status, type Tarefa, type TarefaEntrada } from '../api';
 import { navegar } from '../router';
 import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar, mostrarErros, q, raw, rotuloPrioridade, rotuloStatus, toast, vazio } from '../ui';
 import { montarChat } from './assistente';
@@ -107,9 +107,39 @@ export async function telaPainel(root: HTMLElement) {
     const daLista = tarefas.filter((t) => t.listaId === listaAtual);
     if (!listaAtual) { montar(quadro, vazio('Nenhuma lista', 'Crie sua primeira lista para começar a organizar as tarefas.')); return; }
     if (daLista.length === 0) {
-      montar(quadro, vazio('Esta lista está vazia', 'Cadastre a primeira tarefa e o assistente ajuda a decidir por onde começar.',
+      // Primeiro uso (nenhuma tarefa em lista nenhuma): o estado vazio ensina o fluxo e oferece tarefas de exemplo reais (seção 8: estado vazio)
+      const primeiroUso = tarefas.length === 0;
+      montar(quadro, primeiroUso ? html`
+        <div class="estado boas-vindas">
+          <strong>Bem-vindo ao Blitz</strong>
+          <p style="margin-inline:auto">Organize as tarefas e decida com o assistente o que fazer agora. Três passos para começar:</p>
+          <ol class="passos">
+            <li><span class="passo-n" aria-hidden="true">1</span><div><strong>Crie uma tarefa</strong><br /><span class="small">Título, prioridade, prazo e horas estimadas. O quadro mostra o que fazer, o que está em andamento e o que já foi.</span></div></li>
+            <li><span class="passo-n" aria-hidden="true">2</span><div><strong>Pergunte ao assistente</strong><br /><span class="small">"O que devo fazer agora?" Ele ordena por prazo, prioridade e esforço e marca o cartão "Comece por aqui".</span></div></li>
+            <li><span class="passo-n" aria-hidden="true">3</span><div><strong>Inicie uma sessão de foco</strong><br /><span class="small">Escolha o modo (Pomodoro, Profundo, Relax) e a tarefa. O tempo focado vira métrica, mesmo se a tarefa for apagada.</span></div></li>
+          </ol>
+          <div class="acoes" style="justify-content:center">
+            <button class="btn" type="button" data-exemplos>Criar 3 tarefas de exemplo</button>
+            <button class="btn btn-fantasma" type="button" data-nova-tarefa>+ Criar minha primeira tarefa</button>
+          </div>
+        </div>` : vazio('Esta lista está vazia', 'Cadastre a primeira tarefa e o assistente ajuda a decidir por onde começar.',
         html`<button class="btn" type="button" data-nova-tarefa>+ Nova tarefa</button>`));
       quadro.querySelector('[data-nova-tarefa]')?.addEventListener('click', abrirNovaTarefa);
+      quadro.querySelector<HTMLButtonElement>('[data-exemplos]')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget as HTMLButtonElement;
+        btn.disabled = true;
+        const em = (dias: number) => { const x = new Date(); x.setDate(x.getDate() + dias); return x.toISOString().slice(0, 10); };
+        const exemplos: TarefaEntrada[] = [
+          { titulo: 'Arrastar este cartão para "Em andamento"', descricao: 'Use o mouse ou o botão de seta do cartão (teclado).', prioridade: 'ALTA', prazo: em(1), horasEstimadas: 0.5 },
+          { titulo: 'Perguntar ao assistente o que fazer agora', descricao: 'Clique em Assistente e escolha uma das sugestões.', prioridade: 'MEDIA', prazo: em(3), horasEstimadas: 0.25 },
+          { titulo: 'Iniciar uma sessão de foco nesta tarefa', descricao: 'Clique em Focar neste cartão e escolha o modo Pomodoro.', prioridade: 'BAIXA', prazo: null, horasEstimadas: 1 },
+        ];
+        try {
+          for (const t of exemplos) tarefas.push(await api.criarTarefa(listaAtual!, t));
+          toast('Três tarefas de exemplo criadas. Apague quando quiser.', 'ok');
+          desenharQuadro();
+        } catch (err) { toast(err instanceof Error ? err.message : 'Erro ao criar exemplos.', 'erro'); btn.disabled = false; }
+      });
       return;
     }
     const d = hoje();
