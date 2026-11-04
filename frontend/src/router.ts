@@ -66,36 +66,50 @@ function ligarBotaoTema(shell: HTMLElement) {
   });
 }
 
+const ICONES: Record<string, string> = {
+  painel: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  foco: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',
+  modos: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  assistente: '<path d="M4 5h16v11H9l-5 4z"/>',
+  metricas: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  admin: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  equipe: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5M15 20c0-2.5 2-4 4-4s3 1.5 3 4"/>',
+};
+const icone = (nome: string) => raw(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[nome]}</svg>`);
+
+// Casca: barra lateral fixa (≥768px) ou barra inferior (celular). RA02: tudo é link/botão nativo; RA03: nav rotulada e aria-current.
 function casca(caminho: string) {
   const shell = document.getElementById('shell')!;
-  if (!estado.usuario) { montar(shell, html`<header class="topbar topbar-min">${botaoTema()}</header>`); ligarBotaoTema(shell); return; }
-  const link = (href: string, rotulo: string, ativo: boolean) =>
-    html`<a href="${href}" ${ativo ? raw('aria-current="page"') : ''}>${rotulo}</a>`;
+  if (!estado.usuario) { montar(shell, html`<header class="topbar-min">${botaoTema()}</header>`); ligarBotaoTema(shell); return; }
+  const link = (href: string, ic: string, rotulo: string, ativo: boolean) =>
+    html`<a href="${href}" ${ativo ? raw('aria-current="page"') : ''}>${icone(ic)}<span class="rotulo">${rotulo}</span></a>`;
   const base = caminho.split('/')[0];
+  const papel = estado.usuario.papel;
   montar(shell, html`
-    <header class="topbar">
-      <a class="logo" href="#/">Blitz<span>.</span></a>
-      <nav class="nav" aria-label="Principal">
-        ${link('#/', 'Painel', base === '')}
-        ${link('#/foco', 'Foco', base === 'foco')}
-        ${link('#/modos', 'Modos', base === 'modos')}
-        ${link('#/assistente', 'Assistente', base === 'assistente')}
-        ${link('#/metricas', 'Métricas', base === 'metricas')}
-        ${estado.usuario.papel === 'ADMINISTRADOR' ? link('#/admin', 'Administração', base === 'admin') : ''}
-        ${estado.usuario.papel === 'GESTOR' ? link('#/admin', 'Minha equipe', base === 'admin') : ''}
+    <aside class="sidebar">
+      <a class="logo" href="#/" aria-label="Blitz, ir para o painel">B<span class="rotulo">litz</span><span class="ponto">.</span></a>
+      <nav aria-label="Principal">
+        ${link('#/', 'painel', 'Painel', base === '')}
+        ${link('#/foco', 'foco', 'Foco', base === 'foco')}
+        ${link('#/modos', 'modos', 'Modos', base === 'modos')}
+        ${link('#/assistente', 'assistente', 'Assistente', base === 'assistente')}
+        ${link('#/metricas', 'metricas', 'Métricas', base === 'metricas')}
+        ${papel === 'ADMINISTRADOR' ? link('#/admin', 'admin', 'Administração', base === 'admin') : ''}
+        ${papel === 'GESTOR' ? link('#/admin', 'equipe', 'Minha equipe', base === 'admin') : ''}
       </nav>
-      <span class="spacer"></span>
-      ${botaoTema()}
-      <details class="menu">
-        <summary aria-label="Menu da conta de ${estado.usuario.nome}">${estado.usuario.nome.split(' ')[0]} ▾</summary>
-        <div class="menu-lista">
-          <a href="#/perfil">Perfil e preferências</a>
-          <a href="#/acessibilidade">Acessibilidade</a>
-          <a href="#/privacidade">Privacidade e dados</a>
-          <button type="button" data-sair>Sair</button>
-        </div>
-      </details>
-    </header>`);
+      <div class="rodape">
+        ${botaoTema()}
+        <details class="menu">
+          <summary aria-label="Menu da conta de ${estado.usuario.nome}"><span class="avatar" aria-hidden="true">${estado.usuario.nome.trim().charAt(0).toUpperCase()}</span><span class="rotulo">${estado.usuario.nome.split(' ')[0]}</span></summary>
+          <div class="menu-lista">
+            <a href="#/perfil">Perfil e preferências</a>
+            <a href="#/acessibilidade">Acessibilidade</a>
+            <a href="#/privacidade">Privacidade e dados</a>
+            <button type="button" data-sair>Sair</button>
+          </div>
+        </details>
+      </div>
+    </aside>`);
   ligarBotaoTema(shell);
   const menu = q<HTMLDetailsElement>(shell, '.menu');
   document.addEventListener('click', (e) => { if (!menu.contains(e.target as Node)) menu.open = false; }, { once: true });

@@ -26,7 +26,7 @@ export async function telaPainel(root: HTMLElement) {
 
   montar(root, html`
     <div class="painel">
-      <aside class="coluna-lateral" aria-label="Widgets">
+      <section class="widgets" aria-label="Resumo">
         <div class="card">
           <h3>Foco rápido</h3>
           ${ativa
@@ -56,9 +56,9 @@ export async function telaPainel(root: HTMLElement) {
             <a href="#/metricas">Ver métricas completas</a>`
             : html`<p class="muted small">Métricas indisponíveis no momento.</p>`}
         </div>
-      </aside>
+      </section>
 
-      <section aria-labelledby="quadro-titulo">
+      <section class="quadro-area" aria-labelledby="quadro-titulo">
         <div class="quadro-cabecalho">
           <h1 id="quadro-titulo" style="margin:0">Quadro</h1>
           <div class="abas" role="tablist" aria-label="Listas">
@@ -74,10 +74,17 @@ export async function telaPainel(root: HTMLElement) {
         <div data-quadro></div>
       </section>
 
-      <aside class="coluna-lateral" aria-label="Assistente de IA">
+      <aside class="coluna-assistente" aria-label="Assistente de IA">
         <div class="card"><h3 style="display:flex;justify-content:space-between">Assistente <a class="small" href="#/assistente">Abrir</a></h3><div data-chat></div></div>
       </aside>
     </div>
+
+    <!-- abaixo de 1440px a coluna do assistente some e vira uma gaveta aberta por este botão -->
+    <button type="button" class="btn fab" data-abrir-assistente aria-expanded="false" aria-controls="gaveta-assistente">Assistente</button>
+    <aside class="gaveta" id="gaveta-assistente" aria-label="Assistente de IA" hidden>
+      <div class="gaveta-cabecalho"><h3 style="margin:0">Assistente</h3><a class="small" href="#/assistente">Abrir tela</a><button type="button" class="btn btn-fantasma btn-pequeno" data-fechar-assistente aria-label="Fechar assistente">✕</button></div>
+      <div data-chat-gaveta></div>
+    </aside>
 
     <dialog data-dlg-tarefa aria-labelledby="dlg-tarefa-titulo">
       <h2 id="dlg-tarefa-titulo">Nova tarefa</h2>
@@ -252,4 +259,17 @@ export async function telaPainel(root: HTMLElement) {
   });
   const chat = root.querySelector<HTMLElement>('[data-chat]');
   if (chat) montarChat(chat, true);
+
+  // gaveta do assistente (telas < 1440px): monta o chat só na primeira abertura; Esc fecha e devolve o foco ao botão
+  const fab = q<HTMLButtonElement>(root, '[data-abrir-assistente]');
+  const gaveta = q(root, '[data-gaveta], .gaveta');
+  let chatMontado = false;
+  const fecharGaveta = () => { gaveta.hidden = true; fab.setAttribute('aria-expanded', 'false'); fab.focus(); };
+  fab.addEventListener('click', () => {
+    gaveta.hidden = false; fab.setAttribute('aria-expanded', 'true');
+    if (!chatMontado) { chatMontado = true; montarChat(q(gaveta, '[data-chat-gaveta]'), true); }
+    q(gaveta, '[data-fechar-assistente]').focus();
+  });
+  q(gaveta, '[data-fechar-assistente]').addEventListener('click', fecharGaveta);
+  gaveta.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharGaveta(); });
 }
