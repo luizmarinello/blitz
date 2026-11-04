@@ -3,9 +3,8 @@ import { ApiErro } from './api';
 
 export class Html { constructor(public s: string) {} toString() { return this.s; } }
 export const raw = (s: string) => new Html(s);
-/** Raio amarelo da marca: substitui o Z em "Blitz". */
-export const raio = () => raw('<svg class="raio" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2 4 14h7l-1 8 10-12h-7z" fill="currentColor"/></svg>');
-export const logo = (href: string) => html`<a class="logo" href="${href}" aria-label="Blitz">Blit${raio()}</a>`;
+/** Logo oficial (public/logo-*.png): versão clara ou escura conforme o tema, e só o Z-raio quando a barra está recolhida. */
+export const logo = (href: string, rotulo = 'Blitz') => html`<a class="logo" href="${href}" aria-label="${rotulo}"><img class="logo-escuro" src="/logo-escuro.png" alt="" /><img class="logo-claro" src="/logo-claro.png" alt="" /><img class="logo-icone" src="/icone.png" alt="" /></a>`;
 
 function escapar(v: unknown): string {
   return String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));

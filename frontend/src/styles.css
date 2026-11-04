@@ -175,11 +175,11 @@ main#app:focus { outline: none; }
   padding: var(--space-4) var(--space-3); border-right: 1px solid var(--color-border-subtle);
   background: color-mix(in srgb, var(--color-surface) 72%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: var(--z-menu); }
 html[data-theme="ALTO_CONTRASTE"] .sidebar { background: var(--color-bg); backdrop-filter: none; }
-.logo { font-family: var(--font-title); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.03em; text-decoration: none; color: var(--color-text);
-  display: inline-flex; align-items: center; }
-.logo .raio { width: 1.05em; height: 1.05em; color: var(--color-accent); margin-left: -0.06em; margin-top: -0.1em;
-  filter: drop-shadow(0 0 0.35em color-mix(in srgb, var(--color-accent) 60%, transparent)); }
-:root:not([data-theme="ESCURO"]) .logo .raio { filter: none; stroke: var(--color-text); stroke-width: 1.2; stroke-linejoin: round; }
+.logo { display: inline-flex; align-items: center; text-decoration: none; }
+.logo img { height: 1.75rem; width: auto; display: block; }
+.logo .logo-claro, .logo .logo-icone { display: none; }
+:root:not([data-theme="ESCURO"]) .logo .logo-escuro { display: none; }
+:root:not([data-theme="ESCURO"]) .logo .logo-claro { display: block; }
 .sidebar .logo { padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3); }
 .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
 .sidebar nav a { display: flex; align-items: center; gap: var(--space-3); padding: 0.625rem var(--space-3); border-radius: var(--radius-md);
@@ -200,6 +200,9 @@ html[data-theme="ALTO_CONTRASTE"] .sidebar nav a[aria-current="page"] { backgrou
   .sidebar .rotulo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .sidebar nav a, .sidebar .menu summary { justify-content: center; }
   .sidebar .rodape { align-items: center; }
+  .sidebar .logo { justify-content: center; }
+  :root .sidebar .logo .logo-escuro, :root .sidebar .logo .logo-claro { display: none; }   /* :root para vencer a regra de tema (mesma especificidade, vem depois) */
+  :root .sidebar .logo .logo-icone { display: block; height: 2rem; }
 }
 /* celular: barra inferior fixa */
 @media (max-width: 767px) {
@@ -317,7 +320,8 @@ dialog::backdrop { background: rgba(12, 14, 24, 0.55); backdrop-filter: blur(4px
 /* ---------- auth ---------- */
 .auth { max-width: 26rem; margin: var(--space-12) auto; }
 .auth h1 { text-align: center; }
-.auth .logo { display: flex; justify-content: center; font-size: 2.25rem; margin-bottom: var(--space-6); }
+.auth .logo { display: flex; justify-content: center; margin-bottom: var(--space-6); }
+.auth .logo img { height: 3.25rem; }
 .auth .card { box-shadow: var(--shadow-2); }
 
 /* ---------- painel: widgets em faixa + quadro largo; assistente em coluna ≥1440px ou em gaveta abaixo disso ---------- */

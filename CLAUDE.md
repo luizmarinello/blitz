@@ -160,7 +160,7 @@ Contrastes recalculados em 04/11/2026 (sobre o fundo / sobre a superfície).
 --color-accent:            #FFD23F  /* raio da logo; logotipo é isento de contraste (WCAG 1.4.3/1.4.11). No claro leva contorno; no alto contraste vira #7A5C00 (6.5:1) */
 ```
 
-**Logo:** "Blit" + raio amarelo no lugar do Z (`logo()`/`raio()` em `ui.ts`), sem ponto. Favicon: raio amarelo em quadrado azul-marinho.
+**Logo:** arquivos oficiais em `frontend/public/` (`logo-escuro.png` texto branco, `logo-claro.png` texto preto, `icone.png` só o Z-raio), montados por `logo()` em `ui.ts`; a versão segue o tema e a barra recolhida mostra só o ícone.
 
 ### Alto contraste
 

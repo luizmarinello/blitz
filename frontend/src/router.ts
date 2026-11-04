@@ -1,7 +1,7 @@
 // Roteador por hash. Regras de navegação (seção 8): toda tela autenticada a ≤2 passos do painel; nenhuma sem retorno.
 import { api, type Usuario } from './api';
 import { aplicarPrefs, prefsLocais } from './prefs';
-import { html, montar, q, raio, raw, toast } from './ui';
+import { html, logo, montar, q, raw, toast } from './ui';
 
 export type Params = Record<string, string>;
 export type Tela = (root: HTMLElement, params: Params) => void | Promise<void>;
@@ -88,7 +88,7 @@ function casca(caminho: string) {
   const papel = estado.usuario.papel;
   montar(shell, html`
     <aside class="sidebar">
-      <a class="logo" href="#/" aria-label="Blitz, ir para o painel"><span class="rotulo">Blit</span>${raio()}</a>
+      ${logo('#/', 'Blitz, ir para o painel')}
       <nav aria-label="Principal">
         ${link('#/', 'painel', 'Painel', base === '')}
         ${link('#/foco', 'foco', 'Foco', base === 'foco')}
