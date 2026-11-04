@@ -48,7 +48,8 @@ function atualizarRelogio() {
   if (!raiz || !timer || !modoAtual) return;
   const total = (timer.fase === 'foco' ? modoAtual.cicloFocoMin : modoAtual.cicloPausaMin) * 60;
   q(raiz, '[data-tempo]').textContent = relogio(Math.max(0, timer.restante));
-  q(raiz, '[data-fase]').textContent = timer.fase === 'foco' ? 'Foco' : 'Pausa';
+  q(raiz, '[data-fase]').textContent = (timer.fase === 'foco' ? 'Foco' : 'Pausa') + (timer.rodando ? '' : ' · pausado');   // RA07: estado também em texto
+  q(raiz, '.timer').classList.toggle('pausado', !timer.rodando);
   q(raiz, '[data-ciclos]').textContent = `${timer.ciclos} ${timer.ciclos === 1 ? 'ciclo concluído' : 'ciclos concluídos'} · ${Math.floor(timer.ativos / 60)} min ativos`;
   q(raiz, '[data-barra]').style.width = `${total ? Math.min(100, 100 - (timer.restante / total) * 100) : 100}%`;
   q(raiz, '[data-pausar]').textContent = timer.rodando ? 'Pausar' : 'Continuar';
@@ -76,6 +77,7 @@ export async function telaFoco(root: HTMLElement, params: Params) {
       timer = { sessaoId: ativa.id, fase: 'foco', restante: modoAtual.cicloFocoMin * 60, ativos: 0, rodando: true, ultimoTick: Date.now(), ciclos: 0 };
       salvarTimer();
     }
+    document.documentElement.dataset.imersivo = '1';   // RN05: a sessão toma a tela; a navegação some e o relógio cresce
     desenharTimer(root, ativa, modoAtual, tarefas.find((t) => t.id === ativa!.tarefaId));
     garantirIntervalo();
     return;
@@ -128,9 +130,10 @@ export async function telaFoco(root: HTMLElement, params: Params) {
 function desenharTimer(root: HTMLElement, sessao: Sessao, modo: Modo, tarefa?: Tarefa) {
   modoAtual = modo;
   montar(root, html`
-    <section class="card" style="max-width:36rem;margin:auto" aria-labelledby="foco-titulo">
-      <h1 id="foco-titulo" style="text-align:center">${modo.nome}</h1>
-      <p class="muted" style="text-align:center">${tarefa ? html`Focando em <strong>${tarefa.titulo}</strong>` : 'Sessão livre, sem tarefa vinculada'}</p>
+    <a class="btn btn-fantasma btn-pequeno voltar" href="#/">← Painel</a>
+    <section class="foco-imersivo" aria-labelledby="foco-titulo">
+      <h1 id="foco-titulo">${modo.nome}</h1>
+      <p class="tarefa-atual">${tarefa ? tarefa.titulo : html`<span class="muted">Sessão livre, sem tarefa vinculada</span>`}</p>
       <div class="timer" role="timer" aria-live="off">
         <div class="tempo" data-tempo>--:--</div>
         <div class="fase" data-fase aria-live="polite"></div>

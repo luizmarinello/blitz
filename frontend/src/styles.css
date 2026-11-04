@@ -360,6 +360,21 @@ html[data-theme="ALTO_CONTRASTE"] .tarefa { border-color: var(--color-border-sub
 .atrasada { color: var(--color-danger); font-weight: 600; }
 .concluida .tarefa-titulo { text-decoration: line-through; color: var(--color-text-muted); }
 
+/* ---------- foco: modo imersivo (sessão ativa) ---------- */
+html[data-imersivo] body { grid-template-columns: minmax(0, 1fr); }
+html[data-imersivo] .sidebar, html[data-imersivo] body::before { display: none; }
+html[data-imersivo] main#app { max-width: none; padding: var(--space-4); min-height: 100dvh; display: grid; place-items: center; }
+html[data-imersivo] body::after { --bg-ambient: radial-gradient(60rem 60rem at 50% 55%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 65%); }
+.foco-imersivo { width: min(46rem, 100%); text-align: center; }
+.foco-imersivo .voltar, main#app > .voltar { position: fixed; top: var(--space-4); left: var(--space-4); z-index: var(--z-menu); }
+.foco-imersivo h1 { font-size: 1rem; color: var(--color-text-muted); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: var(--space-2); }
+.foco-imersivo .tarefa-atual { font-family: var(--font-title); font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 700; letter-spacing: -0.02em;
+  max-width: 30ch; margin: 0 auto var(--space-4); text-wrap: balance; }
+.foco-imersivo .timer .tempo { font-size: clamp(5rem, 20vw, 13rem); }
+.foco-imersivo .timer::before { width: 30rem; height: 30rem; }
+.foco-imersivo .acoes { justify-content: center; }
+.timer.pausado .tempo { opacity: 0.55; transition: opacity var(--dur) var(--ease); }
+
 /* ---------- foco ---------- */
 .timer { text-align: center; padding: var(--space-6) 0; position: relative; isolation: isolate; }
 .timer::before { content: ""; position: absolute; inset: 0; margin: auto; width: 20rem; height: 20rem; max-width: 100%; border-radius: 50%; z-index: -1;

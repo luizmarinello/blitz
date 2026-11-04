@@ -41,6 +41,7 @@ export async function renderizar() {
     const params: Params = { ...parametrosConsulta() };
     r.chaves.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])));
     document.title = r.titulo === 'Blitz' ? 'Blitz' : `${r.titulo} · Blitz`;
+    delete document.documentElement.dataset.imersivo;   // só a sessão de foco ativa liga o modo imersivo
     casca(caminho);
     try {
       await r.tela(app, params);
