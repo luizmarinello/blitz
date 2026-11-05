@@ -1,6 +1,7 @@
 // Tela 07 Modos de concentração: CRUD completo (pendência nº 1 da Sprint 4). UC05, RF12, RF13, RN05.
 import { api, type Modo } from '../api';
 import { carregando, confirmar, dados, erroEstado, html, montar, mostrarErros, q, toast, vazio } from '../ui';
+import { iconeModo, identidade } from '../identidade-modo';
 
 export async function telaModos(root: HTMLElement) {
   montar(root, carregando());
@@ -14,9 +15,9 @@ export async function telaModos(root: HTMLElement) {
   const meus = modos.filter((m) => !m.predefinido);
 
   const cartao = (m: Modo) => html`
-    <li class="modo">
-      <div style="display:flex;justify-content:space-between;gap:var(--space-2);align-items:baseline">
-        <h3 style="margin:0">${m.nome}</h3>
+    <li class="modo modo-${identidade(m).slug}">
+      <div style="display:flex;justify-content:space-between;gap:var(--space-2);align-items:center">
+        <h3 style="margin:0;display:flex;align-items:center;gap:var(--space-2)">${iconeModo(m)}${m.nome}</h3>
         ${m.predefinido ? html`<span class="chip chip-neutro">Predefinido</span>` : ''}
       </div>
       <div class="ciclos" aria-label="${m.cicloFocoMin} minutos de foco e ${m.cicloPausaMin} de pausa">${m.cicloFocoMin} min foco · ${m.cicloPausaMin} min pausa</div>
@@ -34,7 +35,7 @@ export async function telaModos(root: HTMLElement) {
       <h1 style="margin:0">Modos de concentração</h1>
       <button class="btn" type="button" data-novo>+ Novo modo</button>
     </div>
-    <p class="muted">Cada modo define o ciclo de foco e pausa da sessão. Os predefinidos não podem ser alterados; crie o seu.</p>
+    <p class="muted">Cada modo define o ciclo de foco e pausa e muda a sessão: <strong>Pomodoro</strong> marca os ciclos em bolinhas, <strong>Profundo</strong> esconde o secundário e não interrompe com avisos, <strong>Relax</strong> dá destaque à pausa. Os predefinidos não podem ser alterados; crie o seu.</p>
     <h2>Predefinidos</h2>
     <ul class="lista-modos">${predefinidos.map(cartao)}</ul>
     <h2 style="margin-top:var(--space-6)">Meus modos</h2>

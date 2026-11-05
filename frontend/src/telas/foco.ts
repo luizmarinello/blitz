@@ -3,6 +3,7 @@
 import { api, type Modo, type Sessao, type Tarefa } from '../api';
 import { navegar, type Params } from '../router';
 import { carregando, confirmar, erroEstado, html, montar, q, relogio, toast } from '../ui';
+import { iconeModo, identidade } from '../identidade-modo';
 
 interface Timer { sessaoId: number; fase: 'foco' | 'pausa'; restante: number; ativos: number; rodando: boolean; ultimoTick: number; ciclos: number }
 const CHAVE = 'blitz.timer';
@@ -31,11 +32,12 @@ function tick() {
   if (timer.fase === 'foco') timer.ativos += passou;
   if (timer.restante <= 0) {
     bip();
+    const avisar = identidade(modoAtual).silencioso ? () => undefined : (m: string) => toast(m, 'ok');   // RN05: Profundo não interrompe
     if (timer.fase === 'foco') {
       timer.ciclos += 1;
-      if (modoAtual.cicloPausaMin > 0) { timer.fase = 'pausa'; timer.restante = modoAtual.cicloPausaMin * 60; toast('Ciclo de foco concluído. Hora da pausa.', 'ok'); }
-      else { timer.restante = modoAtual.cicloFocoMin * 60; toast('Ciclo concluído. Novo ciclo de foco.', 'ok'); }
-    } else { timer.fase = 'foco'; timer.restante = modoAtual.cicloFocoMin * 60; toast('Pausa encerrada. De volta ao foco.', 'ok'); }
+      if (modoAtual.cicloPausaMin > 0) { timer.fase = 'pausa'; timer.restante = modoAtual.cicloPausaMin * 60; avisar('Ciclo de foco concluído. Hora da pausa.'); }
+      else { timer.restante = modoAtual.cicloFocoMin * 60; avisar('Ciclo concluído. Novo ciclo de foco.'); }
+    } else { timer.fase = 'foco'; timer.restante = modoAtual.cicloFocoMin * 60; avisar('Pausa encerrada. De volta ao foco.'); }
   }
   salvarTimer();
   document.title = `${relogio(Math.max(0, timer.restante))} ${timer.fase === 'foco' ? 'Foco' : 'Pausa'} · Blitz`;
@@ -54,6 +56,10 @@ function atualizarRelogio() {
   q(raiz, '[data-barra]').style.width = `${total ? Math.min(100, 100 - (timer.restante / total) * 100) : 100}%`;
   q(raiz, '[data-pausar]').textContent = timer.rodando ? 'Pausar' : 'Continuar';
   q(raiz, '[data-pausar]').setAttribute('aria-pressed', String(!timer.rodando));
+  document.documentElement.dataset.fase = timer.fase;   // a cor do anel e da barra segue a fase (verde na pausa)
+  // Pomodoro: 4 bolinhas, uma por ciclo concluído na rodada (o texto acima já diz o número: RA07)
+  const cheios = timer.ciclos === 0 ? 0 : ((timer.ciclos - 1) % 4) + 1;
+  raiz.querySelectorAll<HTMLElement>('[data-pontos] .ponto').forEach((p, i) => p.classList.toggle('cheio', i < cheios));
 }
 
 export async function telaFoco(root: HTMLElement, params: Params) {
@@ -129,16 +135,20 @@ export async function telaFoco(root: HTMLElement, params: Params) {
 
 function desenharTimer(root: HTMLElement, sessao: Sessao, modo: Modo, tarefa?: Tarefa) {
   modoAtual = modo;
+  const id = identidade(modo);
+  document.documentElement.dataset.modo = id.slug;   // RN05: o CSS muda cor, anel e o que fica visível por modo
   montar(root, html`
     <a class="btn btn-fantasma btn-pequeno voltar" href="#/">← Painel</a>
-    <section class="foco-imersivo" aria-labelledby="foco-titulo">
-      <h1 id="foco-titulo">${modo.nome}</h1>
+    <section class="foco-imersivo modo-${id.slug}" aria-labelledby="foco-titulo">
+      <h1 id="foco-titulo">${iconeModo(modo)} ${modo.nome}</h1>
       <p class="tarefa-atual">${tarefa ? tarefa.titulo : html`<span class="muted">Sessão livre, sem tarefa vinculada</span>`}</p>
       <div class="timer" role="timer" aria-live="off">
         <div class="tempo" data-tempo>--:--</div>
         <div class="fase" data-fase aria-live="polite"></div>
         <div class="barra" aria-hidden="true"><div data-barra style="width:0%"></div></div>
+        ${id.slug === 'pomodoro' ? html`<div class="pontos" data-pontos aria-hidden="true"><span class="ponto"></span><span class="ponto"></span><span class="ponto"></span><span class="ponto"></span></div>` : ''}
         <p class="muted small" data-ciclos></p>
+        ${id.mensagemPausa ? html`<p class="mensagem-pausa" data-mensagem-pausa>${id.mensagemPausa}</p>` : ''}
       </div>
       <div class="acoes" style="justify-content:center">
         <button class="btn" type="button" data-pausar aria-pressed="false">Pausar</button>

@@ -42,6 +42,7 @@ export async function renderizar() {
     r.chaves.forEach((k, i) => (params[k] = decodeURIComponent(m[i + 1])));
     document.title = r.titulo === 'Blitz' ? 'Blitz' : `${r.titulo} · Blitz`;
     delete document.documentElement.dataset.imersivo;   // só a sessão de foco ativa liga o modo imersivo
+    delete document.documentElement.dataset.modo; delete document.documentElement.dataset.fase;
     casca(caminho);
     try {
       await r.tela(app, params);

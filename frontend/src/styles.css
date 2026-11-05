@@ -406,6 +406,28 @@ html[data-theme="ALTO_CONTRASTE"] .tarefa { border-color: var(--color-border-sub
 .atrasada { color: var(--color-danger); font-weight: 600; }
 .concluida .tarefa-titulo { text-decoration: line-through; color: var(--color-text-muted); }
 
+/* ---------- identidade dos modos (RN05): cor por modo, verde na pausa ---------- */
+:root { --cor-modo: var(--color-primary); }
+html[data-modo="pomodoro"] { --cor-modo: var(--color-warning); }
+html[data-modo="relax"] { --cor-modo: var(--color-success); }
+html[data-fase="pausa"] { --cor-modo: var(--color-success); }
+.icone-modo { width: 1.25em; height: 1.25em; vertical-align: -0.25em; color: var(--cor-modo); }
+.modo { border-top: 3px solid var(--color-border-subtle); }
+.modo-pomodoro { border-top-color: var(--color-warning); } .modo-pomodoro .icone-modo { color: var(--color-warning); }
+.modo-profundo { border-top-color: var(--color-primary); } .modo-profundo .icone-modo { color: var(--color-primary); }
+.modo-relax { border-top-color: var(--color-success); } .modo-relax .icone-modo { color: var(--color-success); }
+.modo-personalizado { border-top-color: var(--color-text-muted); } .modo-personalizado .icone-modo { color: var(--color-text-muted); }
+.pontos { display: flex; gap: var(--space-2); justify-content: center; margin: var(--space-2) 0; }
+.ponto { width: 0.8rem; height: 0.8rem; border-radius: 50%; border: 2px solid var(--cor-modo); transition: background var(--dur) var(--ease); }
+.ponto.cheio { background: var(--cor-modo); }
+.mensagem-pausa { display: none; color: var(--color-success); font-size: 1.125rem; margin: var(--space-2) auto 0; }
+html[data-fase="pausa"] .mensagem-pausa { display: block; }
+html[data-fase="pausa"] .foco-imersivo .fase { font-size: 1.5rem; color: var(--color-success); font-weight: 600; }
+/* Profundo: só o essencial na tela; avisos comuns ficam escondidos, erros não */
+html[data-modo="profundo"] .foco-imersivo [data-pular], html[data-modo="profundo"] .foco-imersivo [data-ciclos], html[data-modo="profundo"] .foco-imersivo .small { display: none; }
+html[data-modo="profundo"] .toast:not(.toast-erro) { display: none; }
+html[data-modo="profundo"] body::after { --bg-ambient: none; }
+
 /* ---------- foco: modo imersivo (sessão ativa) ---------- */
 html[data-imersivo] body { grid-template-columns: minmax(0, 1fr); }
 html[data-imersivo] .sidebar, html[data-imersivo] body::before { display: none; }
@@ -424,7 +446,7 @@ html[data-imersivo] body::after { --bg-ambient: radial-gradient(60rem 60rem at 5
 /* ---------- foco ---------- */
 .timer { text-align: center; padding: var(--space-6) 0; position: relative; isolation: isolate; }
 .timer::before { content: ""; position: absolute; inset: 0; margin: auto; width: 20rem; height: 20rem; max-width: 100%; border-radius: 50%; z-index: -1;
-  background: radial-gradient(circle, var(--primary-tint), transparent 68%); animation: respirar 5s ease-in-out infinite; }
+  background: radial-gradient(circle, color-mix(in srgb, var(--cor-modo) 18%, transparent), transparent 68%); animation: respirar 5s ease-in-out infinite; }
 @keyframes respirar { 0%, 100% { transform: scale(0.92); opacity: 0.7; } 50% { transform: scale(1.04); opacity: 1; } }
 html[data-theme="ALTO_CONTRASTE"] .timer::before { display: none; }
 @media (prefers-reduced-motion: reduce) { .timer::before { animation: none; } }
@@ -434,7 +456,7 @@ html[data-motion="reduzir"] .timer::before { animation: none; }
 .timer .fase { color: var(--color-text-muted); font-weight: 500; }
 .timer .fase { font-size: 1.125rem; margin-top: var(--space-2); }
 .barra { height: 0.5rem; background: var(--color-border-subtle); border-radius: 999px; overflow: hidden; margin: var(--space-4) 0; }
-.barra > div { height: 100%; background: var(--color-primary); border-radius: 999px; transition: width 1s linear; }
+.barra > div { height: 100%; background: var(--cor-modo); border-radius: 999px; transition: width 1s linear; }
 
 /* ---------- assistente ---------- */
 .chat { display: flex; flex-direction: column; gap: var(--space-3); }
