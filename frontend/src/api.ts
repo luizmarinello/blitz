@@ -46,6 +46,15 @@ export interface Integracoes {
 }
 export interface MetricasGestor { semOrganizacao?: boolean; organizacao?: string; colaboradores?: number; metricas?: MetricasOrg | null }
 
+export interface FocoTarefa { tarefaId: number; segundos: number; sessoes: number }
+
+// A API gratuita dorme e leva até ~1 min para acordar: quem monta a interface registra aqui o aviso de demora.
+let avisarDemora: () => void = () => undefined;
+export const aoDemorar = (fn: () => void) => { avisarDemora = fn; };
+// RN01: 401 vindo do filtro de segurança (e não de "senha incorreta") significa sessão perdida, por exemplo depois que a API reinicia.
+let sessaoExpirou: () => void = () => undefined;
+export const aoExpirar = (fn: () => void) => { sessaoExpirou = fn; };
+
 export class ApiErro extends Error {
   constructor(public status: number, mensagem: string, public campos: Record<string, string> = {}, public corpo: unknown = null) {
     super(mensagem);
@@ -54,6 +63,7 @@ export class ApiErro extends Error {
 
 async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Promise<T> {
   let res: Response;
+  const demora = setTimeout(() => avisarDemora(), 4000);
   try {
     res = await fetch(BASE + caminho, {
       method: metodo,
@@ -63,11 +73,12 @@ async function chamar<T>(metodo: string, caminho: string, corpo?: unknown): Prom
     });
   } catch {
     throw new ApiErro(0, 'Sem conexão com o servidor. Verifique sua internet e tente de novo.');
-  }
+  } finally { clearTimeout(demora); }
   if (res.status === 204) return undefined as T;
   const texto = await res.text();
   const dados = texto ? JSON.parse(texto) : undefined;
   if (!res.ok) {
+    if (res.status === 401 && dados?.sessaoExpirada) sessaoExpirou();
     const msg = dados?.mensagem ?? (res.status >= 500 ? 'Erro interno. Tente novamente em instantes.' : 'Não foi possível concluir.');
     throw new ApiErro(res.status, msg, dados?.campos ?? {}, dados);
   }
@@ -119,6 +130,7 @@ export const api = {
   encerrarSessao: (id: number, segundosAtivos: number) => chamar<Sessao>('POST', `/api/sessoes/${id}/encerrar`, { segundosAtivos }),
   descartarSessao: (id: number) => chamar<void>('DELETE', `/api/sessoes/${id}`),
   sessoes: () => chamar<Sessao[]>('GET', '/api/sessoes'),
+  focoPorTarefa: () => chamar<FocoTarefa[]>('GET', '/api/sessoes/por-tarefa'),
   metricas: () => chamar<Metricas>('GET', '/api/metricas'),
 
   // UC04

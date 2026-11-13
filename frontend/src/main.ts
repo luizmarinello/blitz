@@ -1,7 +1,8 @@
 import './styles.css';
-import { api, ApiErro } from './api';
+import { api, ApiErro, aoDemorar, aoExpirar } from './api';
+import { toast } from './ui';
 import { aplicarPrefs } from './prefs';
-import { estado, renderizar, rota } from './router';
+import { estado, navegar, renderizar, rota } from './router';
 import { telaLogin, telaCadastro, telaRecuperar, telaRedefinir, telaTermos } from './telas/auth';
 import { telaPainel } from './telas/painel';
 import { telaTarefa } from './telas/tarefa';
@@ -31,6 +32,25 @@ rota('privacidade', telaPrivacidade, { titulo: 'Privacidade e dados' });        
 rota('privacidade/exportar', telaExportar, { titulo: 'Exportar dados' });            // 14
 rota('privacidade/excluir', telaExcluirConta, { titulo: 'Excluir conta' });          // 15
 rota('admin', telaAdmin, { titulo: 'Administração' });                               // UC06–UC10 (sem tela prototipada)
+
+// RNF08 (plano gratuito): avisa quando o servidor está acordando, na tela de carregamento e como toast, no máximo uma vez por minuto
+let avisado = false;
+aoDemorar(() => {
+  if (avisado) return;
+  avisado = true; setTimeout(() => (avisado = false), 60000);
+  const msg = 'O servidor está acordando. No plano gratuito do protótipo isso pode levar até um minuto.';
+  const inicial = document.querySelector('#app > .estado[role="status"]');
+  if (inicial) inicial.insertAdjacentHTML('beforeend', `<p class="small" style="margin:var(--space-3) auto 0">${msg}</p>`);
+  else toast(msg + ' Aguarde, a ação continua em andamento.', 'info');
+});
+
+// RN01: sessão perdida no servidor leva ao login com explicação, em vez de deixar a tela em estado de erro
+aoExpirar(() => {
+  if (!estado.usuario) return;
+  estado.usuario = null;
+  toast('Sua sessão expirou. Entre de novo para continuar.', 'info');
+  navegar('#/login');
+});
 
 async function iniciar() {
   try {

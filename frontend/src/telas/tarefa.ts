@@ -1,7 +1,7 @@
 // Tela 06 Detalhe da tarefa + formulário compartilhado com o painel. RF06 (título, descrição, prioridade, prazo, horas), RN02.
-import { api, type Lista, type Tarefa, type TarefaEntrada } from '../api';
+import { api, type Lista, type Sessao, type Tarefa, type TarefaEntrada } from '../api';
 import { navegar, type Params } from '../router';
-import { carregando, confirmar, dados, dataBr, dataHoraBr, erroEstado, html, montar, mostrarErros, q, rotuloStatus, toast } from '../ui';
+import { carregando, confirmar, dados, dataBr, dataHoraBr, duracao, erroEstado, html, montar, mostrarErros, q, rotuloStatus, toast } from '../ui';
 
 export function formTarefa(t: Partial<Tarefa> = {}, listas: Lista[] = [], listaId?: number) {
   const opt = (v: string, r: string, sel?: string) => html`<option value="${v}" ${v === sel ? 'selected' : ''}>${r}</option>`;
@@ -68,9 +68,9 @@ export function lerTarefa(form: HTMLFormElement): TarefaEntrada {
 export async function telaTarefa(root: HTMLElement, params: Params) {
   const id = Number(params.id);
   montar(root, carregando());
-  let t: Tarefa, listas: Lista[];
+  let t: Tarefa, listas: Lista[], sessoes: Sessao[];
   try {
-    [t, listas] = await Promise.all([api.tarefa(id), api.listas()]);
+    [t, listas, sessoes] = await Promise.all([api.tarefa(id), api.listas(), api.sessoes().catch(() => [])]);
   } catch (e) {
     montar(root, html`<div style="max-width:40rem;margin:auto">${erroEstado(e)}<p style="margin-top:1rem"><a href="#/">Voltar ao painel</a></p></div>`);
     return;
@@ -81,6 +81,15 @@ export async function telaTarefa(root: HTMLElement, params: Params) {
       <p><a href="#/">← Voltar ao painel</a></p>
       <h1>Tarefa</h1>
       <p class="muted small">Criada em ${dataHoraBr(t.criadoEm)}${t.concluidaEm ? html` · Concluída em ${dataHoraBr(t.concluidaEm)}` : ''}${t.prazo ? html` · Prazo ${dataBr(t.prazo)}` : ''}</p>
+      ${(() => {
+        // RN03: sessões de foco desta tarefa. ponytail: usa as 50 sessões mais recentes que a API devolve; o total exato por tarefa está em /api/sessoes/por-tarefa
+        const minhas = sessoes.filter((s) => s.tarefaId === t.id);
+        const total = minhas.reduce((n, s) => n + (s.duracaoSegundos ?? 0), 0);
+        return html`<div class="foco-tarefa" aria-label="Foco nesta tarefa">
+          <strong>⏱ ${minhas.length ? duracao(total) : 'Sem foco registrado'}</strong>
+          <span class="muted small">${minhas.length ? `em ${minhas.length} ${minhas.length === 1 ? 'sessão' : 'sessões'} de foco${t.horasEstimadas ? ` · estimativa ${t.horasEstimadas}h` : ''} · última em ${dataHoraBr(minhas[0].inicio)}` : 'Inicie uma sessão para o tempo aparecer aqui e nas métricas.'}</span>
+        </div>`;
+      })()}
       <form novalidate>
         ${formTarefa(t, listas)}
         <div class="acoes">

@@ -52,7 +52,7 @@ public class SecurityConfig {
             .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> {
                 res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 res.setContentType("application/json;charset=UTF-8");
-                res.getWriter().write("{\"mensagem\":\"Faça login para continuar.\"}");
+                res.getWriter().write("{\"mensagem\":\"Faça login para continuar.\",\"sessaoExpirada\":true}");   // o front usa a marca para voltar ao login (RN01)
             }))
             .build();
     }

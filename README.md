@@ -97,9 +97,9 @@ Há também um teste de fumaça por `curl` contra um servidor rodando: `BASE=htt
 | Método e rota | Caso de uso |
 |---|---|
 | `POST /api/auth/cadastro` · `login` · `logout` · `GET /api/auth/me` · `POST /api/auth/recuperar` · `POST /api/auth/redefinir` | UC01, RF03 |
-| `GET/POST/PUT/DELETE /api/listas` · `GET /api/tarefas` · `POST /api/listas/{id}/tarefas` · `PUT/DELETE /api/tarefas/{id}` · `PATCH /api/tarefas/{id}/status` | UC02 |
+| `GET/POST/PUT/DELETE /api/listas` · `GET /api/tarefas` · `POST /api/listas/{id}/tarefas` · `PUT/DELETE /api/tarefas/{id}` · `PATCH /api/tarefas/{id}/status` · `PATCH /api/tarefas/ordem` (aplica a ordem sugerida pelo assistente, RF16) | UC02 |
 | `GET/POST/PUT/DELETE /api/modos` | UC05 |
-| `POST /api/sessoes` · `GET /api/sessoes/ativa` · `POST /api/sessoes/{id}/encerrar` · `DELETE /api/sessoes/{id}` · `GET /api/sessoes` · `GET /api/metricas` | UC03 |
+| `POST /api/sessoes` · `GET /api/sessoes/ativa` · `POST /api/sessoes/{id}/encerrar` · `DELETE /api/sessoes/{id}` · `GET /api/sessoes` · `GET /api/sessoes/por-tarefa` (tempo de foco por tarefa, RN03) · `GET /api/metricas` | UC03 |
 | `POST /api/ia/mensagem` · `GET /api/ia/historico` · `GET /api/ia/limite` | UC04 |
 | `GET /api/sprints/atual` · `POST /api/sprints/planejar` | RF09 |
 | `GET/PUT /api/acessibilidade` | UC12 |

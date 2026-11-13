@@ -18,8 +18,32 @@ export async function telaMetricas(root: HTMLElement) {
   const maximo = Math.max(1, ...m.porDia.map((d) => d.segundos));
   const concluidas = tarefas.filter((t) => t.status === 'CONCLUIDA').sort((a, b) => (b.concluidaEm ?? '').localeCompare(a.concluidaEm ?? ''));
 
+  // ---------- "Sua semana": só fatos calculados dos dados reais (RF14); nada é estimado ----------
+  const diasComFoco = m.porDia.filter((d) => d.segundos > 0).length;
+  const melhor = m.porDia.reduce((a, b) => (b.segundos > a.segundos ? b : a), m.porDia[0]);
+  let sequencia = 0;   // dias seguidos com foco, contando de hoje para trás (ou de ontem, se hoje ainda está zerado)
+  const rev = [...m.porDia].reverse();
+  for (const d of rev[0]?.segundos ? rev : rev.slice(1)) { if (d.segundos > 0) sequencia++; else break; }
+  const desde = Date.now() - 7 * 864e5;
+  const daSemana = sessoes.filter((s) => new Date(s.inicio).getTime() >= desde && (s.duracaoSegundos ?? 0) > 0);
+  const soma = <K>(chave: (s: Sessao) => K) => { const r = new Map<K, number>(); daSemana.forEach((s) => r.set(chave(s), (r.get(chave(s)) ?? 0) + (s.duracaoSegundos ?? 0))); return [...r.entries()].sort((a, b) => b[1] - a[1])[0]; };
+  const periodo = soma((s) => { const h = new Date(s.inicio).getHours(); return h < 6 ? 'de madrugada' : h < 12 ? 'de manhã' : h < 18 ? 'à tarde' : 'à noite'; });
+  const topTarefa = soma((s) => s.tarefaId ?? 0);
+  const tituloTop = topTarefa && topTarefa[0] ? tarefas.find((t) => t.id === topTarefa[0])?.titulo : undefined;
+
   montar(root, html`
     <h1>Métricas e histórico</h1>
+    ${m.semanaSegundos > 0 ? html`
+      <section class="card resumo-semana" aria-labelledby="r-titulo">
+        <h2 id="r-titulo">Sua semana</h2>
+        <p class="resumo-frase">Você focou <strong>${duracao(m.semanaSegundos)}</strong> em ${m.sessoesSemana} ${m.sessoesSemana === 1 ? 'sessão' : 'sessões'}, em ${diasComFoco} dos últimos 7 dias.</p>
+        <ul class="fatos">
+          <li><span class="fato-valor">${sequencia} ${sequencia === 1 ? 'dia' : 'dias'}${sequencia >= 7 ? ' ou mais' : ''}</span><span class="muted small">de sequência atual com foco</span></li>
+          <li><span class="fato-valor">${DIAS[new Date(melhor.dia + 'T12:00:00').getDay()]} ${melhor.dia.slice(8)}</span><span class="muted small">melhor dia · ${duracao(melhor.segundos)}</span></li>
+          ${periodo ? html`<li><span class="fato-valor">${periodo[0]}</span><span class="muted small">é quando você mais foca</span></li>` : ''}
+          ${tituloTop ? html`<li><span class="fato-valor fato-texto">${tituloTop}</span><span class="muted small">tarefa com mais foco · ${duracao(topTarefa![1])}</span></li>` : ''}
+        </ul>
+      </section>` : ''}
     <div class="kpis">
       <div class="kpi"><div class="valor">${duracao(m.hojeSegundos)}</div><div class="muted small">de foco hoje</div></div>
       <div class="kpi"><div class="valor">${duracao(m.semanaSegundos)}</div><div class="muted small">nos últimos 7 dias</div></div>
@@ -35,7 +59,7 @@ export async function telaMetricas(root: HTMLElement) {
           ${m.porDia.map((d) => html`
             <div class="dia">
               <span class="small">${d.segundos ? duracao(d.segundos) : ''}</span>
-              <div class="barra-v" style="height:${Math.max(2, Math.round((d.segundos / maximo) * 100))}%"></div>
+              <div class="barra-v ${d.dia === melhor.dia && d.segundos > 0 ? 'melhor' : ''}" style="height:${Math.max(2, Math.round((d.segundos / maximo) * 100))}%"></div>
               <span class="rotulo">${DIAS[new Date(d.dia + 'T12:00:00').getDay()]} ${d.dia.slice(8)}</span>
             </div>`)}
         </div>`}

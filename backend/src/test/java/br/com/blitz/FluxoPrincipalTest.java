@@ -119,6 +119,10 @@ class FluxoPrincipalTest {
         chamar(post("/api/sessoes").contentType(MediaType.APPLICATION_JSON).content("{\"modoId\":" + modoId + "}"), 409);
         mvc.perform(post("/api/sessoes/" + sessaoId + "/encerrar").session(SESSAO).contentType(MediaType.APPLICATION_JSON).content(j("{'segundosAtivos':5}")))
             .andExpect(status().isOk()).andExpect(jsonPath("$.duracaoSegundos").value(lessThanOrEqualTo(5)));
+        mvc.perform(get("/api/sessoes/por-tarefa").session(SESSAO))
+            .andExpect(jsonPath("$[0].tarefaId").value((int) tarefaId)).andExpect(jsonPath("$[0].sessoes").value(1));   // foco × tarefa
+        mvc.perform(post("/api/modos").session(SESSAO).contentType(MediaType.APPLICATION_JSON).content("{nao e json"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.mensagem").exists());                            // RF04: corpo ilegível em pt-BR
         chamar(delete("/api/modos/" + modoId), 409);                       // ON DELETE RESTRICT
         chamar(delete("/api/tarefas/" + tarefaId), 204);                   // ON DELETE SET NULL
         mvc.perform(get("/api/metricas").session(SESSAO)).andExpect(jsonPath("$.totalSessoes").value(1));

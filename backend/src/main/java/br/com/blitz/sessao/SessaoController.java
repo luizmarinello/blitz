@@ -79,6 +79,15 @@ public class SessaoController {
         return sessoes.findTop50ByUsuarioIdAndFimIsNotNullOrderByInicioDesc(ua.id());
     }
 
+    /** RN03: quanto tempo de foco cada tarefa já recebeu. É o cruzamento foco × tarefa que o quadro e o detalhe da tarefa exibem. */
+    @GetMapping("/sessoes/por-tarefa")
+    public List<Map<String, Object>> porTarefa(@AuthenticationPrincipal UsuarioAutenticado ua) {
+        List<Map<String, Object>> saida = new ArrayList<>();
+        for (Object[] l : sessoes.focoPorTarefa(ua.id()))
+            saida.add(Map.of("tarefaId", l[0], "segundos", ((Number) l[1]).longValue(), "sessoes", ((Number) l[2]).longValue()));
+        return saida;
+    }
+
     /** RF14: métricas de foco. Agregação em memória sobre os últimos 7 dias (volume por usuário é pequeno). */
     @GetMapping("/metricas")
     public Map<String, Object> metricas(@AuthenticationPrincipal UsuarioAutenticado ua) {

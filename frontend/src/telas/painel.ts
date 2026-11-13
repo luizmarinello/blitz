@@ -1,6 +1,6 @@
 // Tela 05 Painel principal: widgets | quadro | assistente (≥1280px). Só o quadro fica visível em larguras menores.
 // UC02 (listas e tarefas), RF05–RF08, RN02. Mover por botões = equivalente por teclado do drag and drop (US-02 pendente).
-import { api, type Lista, type Metricas, type Modo, type Sessao, type SprintAtual, type Status, type Tarefa, type TarefaEntrada } from '../api';
+import { api, type FocoTarefa, type Lista, type Metricas, type Modo, type Sessao, type SprintAtual, type Status, type Tarefa, type TarefaEntrada } from '../api';
 import { navegar } from '../router';
 import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar, mostrarErros, q, raw, rotuloPrioridade, rotuloStatus, toast, vazio } from '../ui';
 import { montarChat } from './assistente';
@@ -12,17 +12,19 @@ let listaAtual: number | null = Number(sessionStorage.getItem('blitz.lista')) ||
 
 export async function telaPainel(root: HTMLElement) {
   montar(root, carregando('Carregando seu quadro…'));
-  let listas: Lista[], tarefas: Tarefa[], modos: Modo[], metricas: Metricas | null, ativa: Sessao | undefined, sprint: SprintAtual | undefined;
+  let listas: Lista[], tarefas: Tarefa[], modos: Modo[], metricas: Metricas | null, ativa: Sessao | undefined, sprint: SprintAtual | undefined, foco: FocoTarefa[];
   try {
-    [listas, tarefas, modos, metricas, ativa, sprint] = await Promise.all([
+    [listas, tarefas, modos, metricas, ativa, sprint, foco] = await Promise.all([
       api.listas(), api.tarefas(), api.modos(), api.metricas().catch(() => null), api.sessaoAtiva().catch(() => undefined),
-      api.sprintAtual().catch(() => undefined),
+      api.sprintAtual().catch(() => undefined), api.focoPorTarefa().catch(() => []),
     ]);
+    // RN03: tempo de foco já investido em cada tarefa, mostrado no cartão
   } catch (e) {
     montar(root, erroEstado(e, 'recarregar'));
     root.querySelector('[data-acao=recarregar]')?.addEventListener('click', () => telaPainel(root));
     return;
   }
+  const focoDe = new Map(foco.map((f) => [f.tarefaId, f.segundos]));
   if (!listas.some((l) => l.id === listaAtual)) listaAtual = listas[0]?.id ?? null;
 
   montar(root, html`
@@ -43,7 +45,7 @@ export async function telaPainel(root: HTMLElement) {
           <h3>Sprint da semana</h3>
           ${sprint
             ? html`<p><strong>${dataBr(sprint.sprint.dataInicio)} a ${dataBr(sprint.sprint.dataFim)}</strong><br /><span class="muted small">${sprint.tarefas} ${sprint.tarefas === 1 ? 'tarefa' : 'tarefas'} · ${sprint.horasPlanejadas}h planejadas</span></p>`
-            : html`<p class="muted small">Nenhuma sprint planejada para esta semana. O Blitz escolhe as tarefas por prazo, prioridade e esforço até preencher sua capacidade.</p>`}
+            : html`<p class="muted small">Sem sprint nesta semana. O Blitz escolhe as tarefas por prazo, prioridade e esforço.</p>`}
           <form class="linha" data-form-sprint style="align-items:flex-end">
             <div class="campo" style="margin:0;flex:0 1 7rem"><label for="w-cap">Horas/semana</label><input id="w-cap" name="capacidadeHoras" type="number" min="1" max="168" value="20" /></div>
             <button class="btn btn-secundario btn-pequeno" type="submit">${sprint ? 'Replanejar' : 'Planejar'}</button>
@@ -157,7 +159,7 @@ export async function telaPainel(root: HTMLElement) {
       (a.prazo ?? '9999').localeCompare(b.prazo ?? '9999') || peso[a.prioridade] - peso[b.prioridade] || (a.horasEstimadas ?? 1e9) - (b.horasEstimadas ?? 1e9))[0]?.id;
     const simbolo: Record<Status, string> = { BACKLOG: '○', EM_ANDAMENTO: '◐', CONCLUIDA: '✓' };   // RA07: status com símbolo, não só cor
     montar(quadro, html`
-      <p class="muted small" id="dica-quadro">Arraste os cartões entre as colunas ou use os botões de seta de cada cartão (teclado).</p>
+      <p class="sr-only" id="dica-quadro">Arraste os cartões entre as colunas ou use os botões de seta de cada cartão (teclado).</p>
       <div class="colunas">${STATUS.map((s) => {
       const itens = daLista.filter((t) => t.status === s);
       return html`
@@ -177,6 +179,7 @@ export async function telaPainel(root: HTMLElement) {
                     ${sprint && t.sprintId === sprint.sprint.id && t.status !== 'CONCLUIDA' ? html`<span class="chip chip-neutro" title="Na sprint desta semana">⚑ Sprint</span>` : ''}
                     ${t.prazo ? html`<span class="${atrasada ? 'atrasada' : ''}">${atrasada ? '⚠ Atrasada · ' : 'Prazo '}${dataBr(t.prazo)}</span>` : ''}
                     ${t.horasEstimadas ? html`<span>${t.horasEstimadas}h</span>` : ''}
+                    ${focoDe.get(t.id) ? html`<span title="Tempo de foco já registrado nesta tarefa">⏱ ${duracao(focoDe.get(t.id)!)} de foco</span>` : ''}
                   </div>
                   <div class="tarefa-acoes">
                     <span>
