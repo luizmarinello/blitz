@@ -126,41 +126,46 @@ Prefixos: `RF` funcional · `RNF` não funcional · `RF-LGPD` proteção de dado
 
 Todos os valores abaixo tiveram o contraste **calculado e verificado** pela fórmula de luminância da WCAG. Não altere sem recalcular.
 
-### Tema claro
+A identidade tem **dois temas**: escuro (preto + azul, padrão) e claro (branco + azul). A barra lateral é azul nos dois. O alto contraste continua existindo só como recurso de acessibilidade (RA05). Contrastes recalculados em 13/11/2026 (sobre o fundo / sobre a superfície).
+
+### Tema claro (branco + azul)
 
 ```css
---color-bg:                #FFFFFF
---color-surface:           #F5F6F8
---color-border-subtle:     #D9DDE3  /* decorativo, sem exigência de contraste */
---color-border-interactive:#767F8C  /* campos e controles — 4.05:1 */
---color-text:              #1A1D23  /* 16.88:1 */
---color-text-muted:        #5A6270  /* 6.15:1 */
---color-primary:           #3B49DF  /* 6.55:1 */
---color-primary-hover:     #2E3AB8
---color-success:           #1E7B34  /* 5.33:1 */
---color-warning:           #96590A  /* 5.63:1 */
---color-danger:            #C0261F  /* 5.94:1 */
+--color-bg:                 #FFFFFF
+--color-surface:            #EEF4FF
+--color-border-subtle:      #D3DFF7  /* decorativo, sem exigência de contraste */
+--color-border-interactive: #6B7A99  /* campos e controles — 4.31:1 / 3.91:1 */
+--color-text:               #0A1730  /* 17.82:1 / 16.14:1 */
+--color-text-muted:         #46557A  /* 7.39:1 / 6.70:1 */
+--color-primary:            #1D4ED8  /* links e destaques — 6.70:1 / 6.07:1 */
+--color-primary-solid:      #1D4ED8  /* fundo de botão; texto branco = 6.70:1 (hover #1E40AF = 8.72:1) */
+--color-success:            #1E7B34  /* 5.33:1 / 4.83:1 */
+--color-warning:            #96590A  /* 5.63:1 / 5.10:1 */
+--color-danger:             #C0261F  /* 5.94:1 / 5.38:1 */
+--sidebar-1 / --sidebar-2:  #12379A / #0E2A78  /* texto branco = 10.30:1; secundário #C9D8F7 = 7.19:1 */
 ```
 
-### Tema escuro (padrão: identidade da marca, preto + azul-marinho)
-
-Contrastes recalculados em 04/11/2026 (sobre o fundo / sobre a superfície).
+### Tema escuro (padrão: preto + azul)
 
 ```css
---color-bg:                #0B0D14
---color-surface:           #121A33
---color-border-subtle:     #232C47
---color-border-interactive:#66707E  /* 3.87:1 / 3.43:1 */
---color-text:              #EEF1F6  /* 17.14:1 / 15.19:1 */
---color-text-muted:        #A3ACBA  /* 8.47:1 / 7.51:1 */
---color-primary:           #8A94FF  /* 7.17:1 / 6.35:1 */
---color-success:           #4ADE80  /* 11.14:1 / 9.87:1 */
---color-warning:           #F2B44D  /* 10.55:1 / 9.34:1 */
---color-danger:            #FF6B60  /* 6.95:1 / 6.16:1 */
---color-accent:            #FFD23F  /* raio da logo; logotipo é isento de contraste (WCAG 1.4.3/1.4.11). No claro leva contorno; no alto contraste vira #7A5C00 (6.5:1) */
+--color-bg:                 #05080F
+--color-surface:            #0B1529
+--color-border-subtle:      #1A2A4A
+--color-border-interactive: #5E7093  /* 4.02:1 / 3.65:1 */
+--color-text:               #EAF1FF  /* 17.67:1 / 16.06:1 */
+--color-text-muted:         #9DB0D0  /* 9.12:1 / 8.28:1 */
+--color-primary:            #6BA6FF  /* links e destaques — 8.13:1 / 7.39:1 */
+--color-primary-solid:      #2563EB  /* fundo de botão; texto branco = 5.17:1 (hover #1D4ED8 = 6.70:1) */
+--color-success:            #4ADE80  /* 11.50:1 / 10.45:1 */
+--color-warning:            #F2B44D  /* 10.89:1 / 9.89:1 */
+--color-danger:             #FF6B60  /* 7.18:1 / 6.52:1 */
+--sidebar-1 / --sidebar-2:  #0A1A3D / #060F26  /* texto branco = 17.10:1; secundário #C9D8F7 = 11.93:1 */
+--color-accent:             #FFD23F  /* amarelo da marca: logo, avatar (texto #0B0D14 = 13.44:1) e marcador do item ativo. No alto contraste vira #7A5C00 */
 ```
 
-**Logo:** arquivos oficiais em `frontend/public/` (`logo-escuro.png` texto branco, `logo-claro.png` texto preto, `icone.png` só o Z-raio), montados por `logo()` em `ui.ts`; a versão segue o tema e a barra recolhida mostra só o ícone.
+**Uso de cor:** azul é a cor de identidade (botões, links, barra, colunas e modos). Verde, âmbar e vermelho aparecem só onde significam estado ou prioridade (RA07), sempre com texto ou símbolo junto. `--color-primary` é para texto e contorno; `--color-primary-solid` é para preenchimento com texto branco.
+
+**Logo:** arquivos oficiais em `frontend/public/` (`logo-escuro.png` texto branco, `logo-claro.png` texto preto, `icone.png` só o Z-raio), montados por `logo()` em `ui.ts`. Na barra lateral azul usa-se sempre a de texto branco; fora dela a versão segue o tema; a barra recolhida mostra só o ícone.
 
 ### Alto contraste
 

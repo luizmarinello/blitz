@@ -3,20 +3,26 @@
    Nenhuma cor é escrita fora deste bloco: sempre pelo token.
    ===================================================================== */
 :root {
+  /* Tema claro = branco + azul. Contrastes (sobre o fundo / sobre a superfície), recalculados em 13/11/2026. */
   --color-bg: #FFFFFF;
-  --color-surface: #F5F6F8;
-  --color-border-subtle: #D9DDE3;        /* decorativo — nunca em campo ou controle */
-  --color-border-interactive: #767F8C;   /* 4.05:1 */
-  --color-text: #1A1D23;                 /* 16.88:1 */
-  --color-text-muted: #5A6270;           /* 6.15:1 */
-  --color-primary: #3B49DF;              /* 6.55:1 */
-  --color-primary-hover: #2E3AB8;
+  --color-surface: #EEF4FF;              /* azul bem claro */
+  --color-border-subtle: #D3DFF7;        /* decorativo — nunca em campo ou controle */
+  --color-border-interactive: #6B7A99;   /* 4.31:1 / 3.91:1 */
+  --color-text: #0A1730;                 /* 17.82:1 / 16.14:1 */
+  --color-text-muted: #46557A;           /* 7.39:1 / 6.70:1 */
+  --color-primary: #1D4ED8;              /* 6.70:1 / 6.07:1 — links e textos de destaque */
+  --color-primary-hover: #1E40AF;
+  --color-primary-solid: #1D4ED8;        /* preenchimento de botão; branco por cima = 6.70:1 */
+  --color-primary-solid-hover: #1E40AF;  /* 8.72:1 */
   --color-on-primary: #FFFFFF;
-  --color-success: #1E7B34;              /* 5.33:1 */
-  --color-warning: #96590A;              /* 5.63:1 */
-  --color-danger: #C0261F;               /* 5.94:1 */
-  --color-accent: #FFD23F;               /* amarelo do raio da marca; só na logo (logotipo é isento de contraste) */
+  --color-success: #1E7B34;              /* 5.33:1 / 4.83:1 */
+  --color-warning: #96590A;              /* 5.63:1 / 5.10:1 */
+  --color-danger: #C0261F;               /* 5.94:1 / 5.38:1 */
+  --color-accent: #FFD23F;               /* amarelo do raio da marca: logo, avatar e marcador do item ativo */
+  --color-on-accent: #0B0D14;            /* 13.44:1 sobre o amarelo */
   --color-focus: var(--color-primary);
+  /* barra lateral azul nos dois temas; branco por cima = 10.30:1 (claro) e 17.10:1 (escuro) */
+  --sidebar-1: #12379A; --sidebar-2: #0E2A78;
 
   --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
   --space-6: 1.5rem; --space-8: 2rem; --space-12: 3rem;
@@ -29,36 +35,39 @@
   --shadow-3: 0 24px 56px -20px color-mix(in srgb, var(--color-primary) 40%, transparent);
   /* fundo ambiente: dois halos radiais da marca, bem suaves, para quebrar a chapa branca */
   --bg-ambient:
-    radial-gradient(60rem 32rem at 12% -8%, color-mix(in srgb, var(--color-primary) 9%, transparent), transparent 60%),
-    radial-gradient(44rem 28rem at 100% 0%, color-mix(in srgb, var(--color-success) 6%, transparent), transparent 60%);
+    radial-gradient(60rem 32rem at 12% -8%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 60%),
+    radial-gradient(44rem 28rem at 100% 0%, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 60%);
   --primary-tint: color-mix(in srgb, var(--color-primary) 9%, var(--color-bg));
   --dur: 160ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --z-menu: 20; --z-toast: 50; --z-skip: 100;
 }
 
-/* Tema escuro = identidade da marca: fundo preto, superfícies azul-marinho. Contrastes recalculados (fundo / superfície). */
+/* Tema escuro (padrão) = preto + azul. Contrastes (sobre o fundo / sobre a superfície), recalculados em 13/11/2026. */
 html[data-theme="ESCURO"] {
-  --color-bg: #0B0D14;
-  --color-surface: #121A33;
-  --color-border-subtle: #232C47;
-  --color-border-interactive: #66707E;   /* 3.87:1 / 3.43:1 */
-  --color-text: #EEF1F6;                 /* 17.14:1 / 15.19:1 */
-  --color-text-muted: #A3ACBA;           /* 8.47:1 / 7.51:1 */
-  --color-primary: #8A94FF;              /* 7.17:1 / 6.35:1 */
-  --color-primary-hover: #A5ADFF;
-  --color-on-primary: #0B0D14;           /* 7.17:1 sobre o primário */
-  --color-success: #4ADE80;              /* 11.14:1 / 9.87:1 */
-  --color-warning: #F2B44D;              /* 10.55:1 / 9.34:1 */
-  --color-danger: #FF6B60;               /* 6.95:1 / 6.16:1 */
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 12px 32px -12px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.35);
-  --shadow-3: 0 24px 56px -20px rgba(0, 0, 0, 0.8);
+  --color-bg: #05080F;
+  --color-surface: #0B1529;
+  --color-border-subtle: #1A2A4A;
+  --color-border-interactive: #5E7093;   /* 4.02:1 / 3.65:1 */
+  --color-text: #EAF1FF;                 /* 17.67:1 / 16.06:1 */
+  --color-text-muted: #9DB0D0;           /* 9.12:1 / 8.28:1 */
+  --color-primary: #6BA6FF;              /* 8.13:1 / 7.39:1 — links e textos de destaque */
+  --color-primary-hover: #9CC3FF;
+  --color-primary-solid: #2563EB;        /* preenchimento de botão; branco por cima = 5.17:1 */
+  --color-primary-solid-hover: #1D4ED8;  /* 6.70:1 */
+  --color-on-primary: #FFFFFF;
+  --color-success: #4ADE80;              /* 11.50:1 / 10.45:1 */
+  --color-warning: #F2B44D;              /* 10.89:1 / 9.89:1 */
+  --color-danger: #FF6B60;               /* 7.18:1 / 6.52:1 */
+  --sidebar-1: #0A1A3D; --sidebar-2: #060F26;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 12px 32px -12px color-mix(in srgb, var(--color-primary-solid) 45%, transparent), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 24px 56px -20px color-mix(in srgb, var(--color-primary-solid) 55%, transparent);
   --bg-ambient:
-    radial-gradient(60rem 32rem at 12% -8%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 60%),
-    radial-gradient(44rem 28rem at 100% 0%, color-mix(in srgb, var(--color-accent) 5%, transparent), transparent 60%);
-  --primary-tint: color-mix(in srgb, var(--color-primary) 16%, var(--color-bg));
-  --borda-superficie: color-mix(in srgb, var(--color-text) 9%, transparent);
+    radial-gradient(60rem 32rem at 12% -8%, color-mix(in srgb, var(--color-primary-solid) 22%, transparent), transparent 60%),
+    radial-gradient(44rem 28rem at 100% 0%, color-mix(in srgb, var(--color-primary) 9%, transparent), transparent 60%);
+  --primary-tint: color-mix(in srgb, var(--color-primary-solid) 22%, var(--color-bg));
+  --borda-superficie: color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 html[data-theme="ESCURO"] :is(.card, .coluna, .modo, .kpi, .msg-ia, .tarefa) { border-color: var(--borda-superficie); }
 html[data-theme="ESCURO"] .card { background: linear-gradient(180deg, color-mix(in srgb, var(--color-text) 3%, var(--color-surface)), var(--color-surface)); }
@@ -76,7 +85,9 @@ html[data-theme="ALTO_CONTRASTE"] {
   --color-success: #005A00;
   --color-warning: #6B3D00;
   --color-danger: #A50000;
+  --color-primary-solid: #0000CC; --color-primary-solid-hover: #000099;
   --color-accent: #7A5C00;               /* amarelo escurecido: 6.5:1 */
+  --color-on-accent: #FFFFFF;
   --shadow-1: none; --shadow-2: none; --shadow-3: none;
   --bg-ambient: none;                    /* alto contraste é chapado de propósito */
   --primary-tint: #FFFFFF;
@@ -129,7 +140,7 @@ dialog[open]::backdrop { animation: aparecer calc(var(--dur) * 1.5) var(--ease) 
 @keyframes sair { to { opacity: 0; transform: translateY(0.5rem); } }
 h1, h2, h3 { font-family: var(--font-title); line-height: 1.15; margin: 0 0 var(--space-3); font-weight: 700;
   letter-spacing: -0.02em; text-wrap: balance; }
-h1 { font-size: 2rem; } h2 { font-size: 1.375rem; } h3 { font-size: 1.125rem; letter-spacing: -0.01em; }
+h1 { font-size: 1.75rem; } h2 { font-size: 1.375rem; } h3 { font-size: 1.125rem; letter-spacing: -0.01em; }
 p { margin: 0 0 var(--space-3); max-width: 68ch; text-wrap: pretty; }
 a { color: var(--color-primary); text-underline-offset: 0.15em; transition: color var(--dur) var(--ease); }
 a:hover { color: var(--color-primary-hover); }
@@ -141,7 +152,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* RA02: foco visível em tudo que é interativo */
 :focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius-sm); }
 .skip-link { position: absolute; left: var(--space-2); top: -3rem; padding: var(--space-2) var(--space-3);
-  background: var(--color-primary); color: var(--color-on-primary); border-radius: var(--radius-sm); z-index: var(--z-skip); }
+  background: var(--color-primary-solid); color: var(--color-on-primary); border-radius: var(--radius-sm); z-index: var(--z-skip); }
 .skip-link:focus { top: var(--space-2); }
 
 /* ---------- casca / navegação ---------- */
@@ -175,6 +186,21 @@ main#app:focus { outline: none; }
   padding: var(--space-4) var(--space-3); border-right: 1px solid var(--color-border-subtle);
   background: color-mix(in srgb, var(--color-surface) 72%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: var(--z-menu); }
 html[data-theme="ALTO_CONTRASTE"] .sidebar { background: var(--color-bg); backdrop-filter: none; }
+/* Identidade: a barra é azul nos dois temas. Dentro dela os tokens são redefinidos para texto branco, então links, botão de tema e menu
+   seguem as mesmas regras do resto do app. O alto contraste fica de fora (barra branca, texto preto). */
+html:not([data-theme="ALTO_CONTRASTE"]) .sidebar {
+  --color-text: #FFFFFF; --color-text-muted: #C9D8F7;                      /* 10.30:1 e 7.19:1 no claro; 17.10:1 e 11.93:1 no escuro */
+  --color-primary: #FFFFFF; --color-focus: #FFFFFF;
+  --color-surface: rgba(255, 255, 255, 0.10); --primary-tint: rgba(255, 255, 255, 0.18);
+  --color-border-interactive: rgba(255, 255, 255, 0.55); --color-border-subtle: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, var(--sidebar-1), var(--sidebar-2)); color: var(--color-text);
+  border-right-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: var(--shadow-2);
+}
+html:not([data-theme="ALTO_CONTRASTE"]) .sidebar nav a[aria-current="page"] { font-weight: 600; box-shadow: inset 3px 0 0 var(--color-accent); }
+html:not([data-theme="ALTO_CONTRASTE"]) .sidebar .menu-lista { background: var(--sidebar-2); }
+/* na barra azul a logo é sempre a de texto branco */
+html[data-theme="CLARO"] .sidebar .logo .logo-escuro { display: block; }
+html[data-theme="CLARO"] .sidebar .logo .logo-claro { display: none; }
 .logo { display: inline-flex; align-items: center; text-decoration: none; }
 .logo img { height: 1.75rem; width: auto; display: block; }
 .logo .logo-claro, .logo .logo-icone { display: none; }
@@ -191,7 +217,7 @@ html[data-theme="ALTO_CONTRASTE"] .sidebar { background: var(--color-bg); backdr
 html[data-theme="ALTO_CONTRASTE"] .sidebar nav a[aria-current="page"] { background: var(--color-primary); color: var(--color-on-primary); }
 .sidebar .rodape { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-2); }
 .sidebar .menu summary { display: flex; align-items: center; gap: var(--space-2); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); }
-.avatar { width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); font-weight: 700;
+.avatar { width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-accent); color: var(--color-on-accent); font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center; flex: none; font-family: var(--font-title); }
 .sidebar .menu-lista { left: 0; right: auto; bottom: calc(100% + var(--space-1)); margin: 0; }
 /* 768–1023px: só ícones; o rótulo continua no nome acessível */
@@ -201,8 +227,8 @@ html[data-theme="ALTO_CONTRASTE"] .sidebar nav a[aria-current="page"] { backgrou
   .sidebar nav a, .sidebar .menu summary { justify-content: center; }
   .sidebar .rodape { align-items: center; }
   .sidebar .logo { justify-content: center; }
-  :root .sidebar .logo .logo-escuro, :root .sidebar .logo .logo-claro { display: none; }   /* :root para vencer a regra de tema (mesma especificidade, vem depois) */
-  :root .sidebar .logo .logo-icone { display: block; height: 2rem; }
+  html[data-theme] .sidebar .logo .logo-escuro, html[data-theme] .sidebar .logo .logo-claro { display: none; }   /* mesma especificidade das regras de tema, vem depois */
+  html[data-theme] .sidebar .logo .logo-icone { display: block; height: 2rem; }
 }
 /* celular: barra inferior fixa */
 @media (max-width: 767px) {
@@ -214,6 +240,7 @@ html[data-theme="ALTO_CONTRASTE"] .sidebar nav a[aria-current="page"] { backgrou
   .sidebar nav { flex-direction: row; flex: 1; justify-content: space-around; }
   .sidebar nav a { padding: var(--space-2); }
   .sidebar nav a:hover { transform: none; }
+  html[data-theme] .sidebar nav a[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--color-accent); }
   .sidebar .rodape { margin: 0; flex-direction: row; align-items: center; }
   .sidebar .menu-lista { left: auto; right: 0; }
   main#app { padding-bottom: 6rem; }
@@ -222,15 +249,15 @@ html[data-theme="ALTO_CONTRASTE"] .sidebar nav a[aria-current="page"] { backgrou
 
 /* ---------- componentes ---------- */
 .btn { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0.625rem var(--space-4); min-height: 2.75rem;
-  border-radius: var(--radius-md); border: 1px solid var(--color-primary); background: var(--color-primary);
+  border-radius: var(--radius-md); border: 1px solid var(--color-primary-solid); background: var(--color-primary-solid);
   color: var(--color-on-primary); font-weight: 600; cursor: pointer; text-decoration: none; box-shadow: var(--shadow-1);
   transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
-.btn:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.btn:hover { background: var(--color-primary-solid-hover); border-color: var(--color-primary-solid-hover); transform: translateY(-1px); box-shadow: var(--shadow-2); }
 .btn:active { transform: translateY(0) scale(0.98); box-shadow: var(--shadow-1); }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 .btn-secundario, .btn-fantasma, .btn-pequeno { box-shadow: none; }
 .btn-secundario:hover, .btn-fantasma:hover { box-shadow: var(--shadow-1); }
-.btn-secundario { background: transparent; color: var(--color-primary); }
+.btn-secundario { background: transparent; color: var(--color-primary); border-color: var(--color-primary); }
 .btn-secundario:hover { background: var(--color-surface); color: var(--color-primary-hover); }
 .btn-perigo { background: var(--color-danger); border-color: var(--color-danger); color: #FFFFFF; }
 .btn-perigo:hover { filter: brightness(0.9); background: var(--color-danger); border-color: var(--color-danger); }
@@ -282,7 +309,7 @@ html[data-theme="ALTO_CONTRASTE"] .card { border-color: var(--color-border-subtl
 .passos li { display: flex; gap: var(--space-3); align-items: flex-start; }
 .passos li strong { display: inline; margin: 0; font-family: var(--font-body); font-size: 1rem; letter-spacing: 0; }   /* não herda o título do .estado */
 .passos .small { color: var(--color-text-muted); }
-.passo-n { width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); font-weight: 700;
+.passo-n { width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-primary-solid); color: var(--color-on-primary); font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center; flex: none; font-family: var(--font-title); }
 .spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid var(--color-border-interactive);
   border-top-color: var(--color-primary); border-radius: 50%; animation: giro 0.8s linear infinite; vertical-align: -0.15rem; }
@@ -371,12 +398,12 @@ html[data-theme="ALTO_CONTRASTE"] .abas button[aria-selected="true"] { backgroun
 html[data-theme="ALTO_CONTRASTE"] .coluna { border-color: var(--color-border-subtle); }
 /* hierarquia do quadro: cada status tem cor + símbolo no cabeçalho (RA07); cada cartão, faixa lateral na cor da prioridade */
 .coluna { border-top: 3px solid var(--color-border-subtle); }
-.coluna-BACKLOG { border-top-color: var(--color-primary); }
-.coluna-EM_ANDAMENTO { border-top-color: var(--color-warning); }
+.coluna-BACKLOG { border-top-color: var(--color-border-interactive); }
+.coluna-EM_ANDAMENTO { border-top-color: var(--color-primary); }
 .coluna-CONCLUIDA { border-top-color: var(--color-success); }
 .coluna h3 .status-icone { display: inline-block; width: 1.25rem; font-size: 0.8125rem; }
-.coluna-BACKLOG .status-icone { color: var(--color-primary); }
-.coluna-EM_ANDAMENTO .status-icone { color: var(--color-warning); }
+.coluna-BACKLOG .status-icone { color: var(--color-text-muted); }
+.coluna-EM_ANDAMENTO .status-icone { color: var(--color-primary); }
 .coluna-CONCLUIDA .status-icone { color: var(--color-success); }
 .tarefa { border-left-width: 4px; }
 .tarefa.prio-ALTA { border-left-color: var(--color-danger); }
@@ -409,14 +436,11 @@ html[data-theme="ALTO_CONTRASTE"] .tarefa { border-color: var(--color-border-sub
 
 /* ---------- identidade dos modos (RN05): cor por modo, verde na pausa ---------- */
 :root { --cor-modo: var(--color-primary); }
-html[data-modo="pomodoro"] { --cor-modo: var(--color-warning); }
-html[data-modo="relax"] { --cor-modo: var(--color-success); }
 html[data-fase="pausa"] { --cor-modo: var(--color-success); }
 .icone-modo { width: 1.25em; height: 1.25em; vertical-align: -0.25em; color: var(--cor-modo); }
 .modo { border-top: 3px solid var(--color-border-subtle); }
-.modo-pomodoro { border-top-color: var(--color-warning); } .modo-pomodoro .icone-modo { color: var(--color-warning); }
-.modo-profundo { border-top-color: var(--color-primary); } .modo-profundo .icone-modo { color: var(--color-primary); }
-.modo-relax { border-top-color: var(--color-success); } .modo-relax .icone-modo { color: var(--color-success); }
+.modo-pomodoro, .modo-profundo, .modo-relax { border-top-color: var(--color-primary); }   /* o ícone distingue o modo; a cor é a da marca */
+.modo-pomodoro .icone-modo, .modo-profundo .icone-modo, .modo-relax .icone-modo { color: var(--color-primary); }
 .modo-personalizado { border-top-color: var(--color-text-muted); } .modo-personalizado .icone-modo { color: var(--color-text-muted); }
 .pontos { display: flex; gap: var(--space-2); justify-content: center; margin: var(--space-2) 0; }
 .ponto { width: 0.8rem; height: 0.8rem; border-radius: 50%; border: 2px solid var(--cor-modo); transition: background var(--dur) var(--ease); }
@@ -465,7 +489,7 @@ html[data-motion="reduzir"] .timer::before { animation: none; }
 .coluna-lateral .mensagens { max-height: 40vh; }
 .msg { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); max-width: 88%; white-space: pre-wrap;
   animation: entrar calc(var(--dur) * 1.5) var(--ease) both; }
-.msg-usuario { align-self: flex-end; background: var(--color-primary); color: var(--color-on-primary); border-bottom-right-radius: var(--radius-sm); }
+.msg-usuario { align-self: flex-end; background: var(--color-primary-solid); color: var(--color-on-primary); border-bottom-right-radius: var(--radius-sm); }
 .msg-ia { align-self: flex-start; background: var(--color-surface); border: 1px solid transparent; border-bottom-left-radius: var(--radius-sm); }
 html[data-theme="ALTO_CONTRASTE"] .msg-ia { border-color: var(--color-border-subtle); }
 .msg-fallback { border-color: var(--color-warning); }
