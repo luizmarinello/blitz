@@ -44,10 +44,15 @@ export async function renderizar() {
     delete document.documentElement.dataset.imersivo;   // só a sessão de foco ativa liga o modo imersivo
     delete document.documentElement.dataset.modo; delete document.documentElement.dataset.fase;
     casca(caminho);
+    // RN01: cada renderização monta num contêiner novo. Uma tela antiga cuja chamada à API termina depois da troca de rota
+    // (ex.: o 401 da sessão perdida já levou ao login e outra chamada do painel ainda estava em andamento) escreve num nó
+    // desconectado, em vez de cobrir a tela atual com "Não foi possível carregar".
+    const tela = Object.assign(document.createElement('div'), { className: 'tela' });
+    app.replaceChildren(tela);
     try {
-      await r.tela(app, params);
+      await r.tela(tela, params);
     } catch (e) {
-      montar(app, html`<div class="estado estado-erro" role="alert"><strong>Algo deu errado</strong>${e instanceof Error ? e.message : ''}</div>`);
+      montar(tela, html`<div class="estado estado-erro" role="alert"><strong>Algo deu errado</strong>${e instanceof Error ? e.message : ''}</div>`);
     }
     return;
   }

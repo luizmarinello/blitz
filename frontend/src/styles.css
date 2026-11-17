@@ -112,7 +112,8 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 @keyframes subir { from { opacity: 0; transform: translateY(0.25rem); } to { opacity: 1; transform: none; } }
 @keyframes surgir { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
-main#app > * { animation: subir var(--dur) var(--ease) both; }
+.tela { display: contents; }   /* contêiner de cada renderização (router.ts); não cria caixa própria */
+main#app > .tela > * { animation: subir var(--dur) var(--ease) both; }
 details[open] > .menu-lista { animation: surgir var(--dur) var(--ease) both; transform-origin: bottom left; }   /* nasce do botão que o abriu */
 dialog[open] { animation: surgir calc(var(--dur) * 1.25) var(--ease) both; }
 dialog[open]::backdrop { animation: aparecer calc(var(--dur) * 1.25) var(--ease) both; }
@@ -442,7 +443,7 @@ html[data-imersivo] main#app { grid-column: 1; max-width: none; padding: var(--s
 html[data-imersivo] body::after { --bg-ambient: radial-gradient(56rem 40rem at 50% 50%, color-mix(in srgb, var(--cor-modo) 8%, transparent), transparent 70%); }
 html[data-theme="ALTO_CONTRASTE"] body::after { display: none; }
 .foco-imersivo { width: min(46rem, 100%); text-align: center; }
-.foco-imersivo .voltar, main#app > .voltar { position: fixed; top: var(--space-4); left: var(--space-4); z-index: var(--z-menu); }
+.foco-imersivo .voltar, .tela > .voltar { position: fixed; top: var(--space-4); left: var(--space-4); z-index: var(--z-menu); }
 .foco-imersivo h1 { font-size: 1rem; color: var(--color-text-muted); font-weight: 600; letter-spacing: 0; margin-bottom: var(--space-2); }
 .foco-imersivo .tarefa-atual { font-family: var(--font-title); font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 600; letter-spacing: -0.02em;
   max-width: 30ch; margin: 0 auto var(--space-4); text-wrap: balance; }
