@@ -78,7 +78,7 @@ export async function telaPainel(root: HTMLElement) {
       <aside class="coluna-assistente" aria-label="Assistente de IA">
         <div class="card">
           <div class="cabecalho-assistente"><h3>Assistente</h3><a class="small" href="#/assistente">Abrir tela</a>
-            <button type="button" class="btn btn-fantasma btn-pequeno" data-recolher-assistente aria-label="Recolher assistente" title="Recolher assistente">⟩</button></div>
+            <button type="button" class="btn btn-fantasma btn-pequeno" data-recolher-assistente aria-label="Recolher assistente" title="Recolher assistente"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16M9 10l2 2-2 2"/></svg></button></div>
           <div data-chat></div>
         </div>
       </aside>
@@ -169,12 +169,12 @@ export async function telaPainel(root: HTMLElement) {
                 <li class="tarefa prio-${t.prioridade} ${t.status === 'CONCLUIDA' ? 'concluida' : ''} ${t.id === recomendada ? 'destaque' : ''}" draggable="true" data-id="${t.id}" aria-describedby="dica-quadro">
                   <a class="tarefa-titulo" href="#/tarefas/${t.id}">${t.titulo}</a>
                   <div class="tarefa-meta">
-                    ${t.id === recomendada ? html`<span class="chip chip-destaque" title="Sugestão por prazo, prioridade e esforço">⚡ Comece por aqui</span>` : ''}
+                    ${t.id === recomendada ? html`<span class="chip chip-destaque" title="Sugestão por prazo, prioridade e esforço">Comece por aqui</span>` : ''}
                     <span class="chip chip-${t.prioridade}">${rotuloPrioridade[t.prioridade]}</span>
-                    ${sprint && t.sprintId === sprint.sprint.id && t.status !== 'CONCLUIDA' ? html`<span class="chip chip-neutro" title="Na sprint desta semana">⚑ Sprint</span>` : ''}
+                    ${sprint && t.sprintId === sprint.sprint.id && t.status !== 'CONCLUIDA' ? html`<span class="chip chip-neutro" title="Na sprint desta semana">Sprint</span>` : ''}
                     ${t.prazo ? html`<span class="${atrasada ? 'atrasada' : ''}">${atrasada ? '⚠ Atrasada · ' : 'Prazo '}${dataBr(t.prazo)}</span>` : ''}
                     ${t.horasEstimadas ? html`<span>${t.horasEstimadas}h</span>` : ''}
-                    ${focoDe.get(t.id) ? html`<span title="Tempo de foco já registrado nesta tarefa">⏱ ${duracao(focoDe.get(t.id)!)} de foco</span>` : ''}
+                    ${focoDe.get(t.id) ? html`<span title="Tempo de foco já registrado nesta tarefa">${duracao(focoDe.get(t.id)!)} de foco</span>` : ''}
                   </div>
                   <div class="tarefa-acoes">
                     <span>

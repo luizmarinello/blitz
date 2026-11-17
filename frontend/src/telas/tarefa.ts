@@ -86,7 +86,7 @@ export async function telaTarefa(root: HTMLElement, params: Params) {
         const minhas = sessoes.filter((s) => s.tarefaId === t.id);
         const total = minhas.reduce((n, s) => n + (s.duracaoSegundos ?? 0), 0);
         return html`<div class="foco-tarefa" aria-label="Foco nesta tarefa">
-          <strong>⏱ ${minhas.length ? duracao(total) : 'Sem foco registrado'}</strong>
+          <strong>${minhas.length ? duracao(total) : 'Sem foco registrado'}</strong>
           <span class="muted small">${minhas.length ? `em ${minhas.length} ${minhas.length === 1 ? 'sessão' : 'sessões'} de foco${t.horasEstimadas ? ` · estimativa ${t.horasEstimadas}h` : ''} · última em ${dataHoraBr(minhas[0].inicio)}` : 'Inicie uma sessão para o tempo aparecer aqui e nas métricas.'}</span>
         </div>`;
       })()}

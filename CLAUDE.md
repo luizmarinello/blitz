@@ -126,46 +126,48 @@ Prefixos: `RF` funcional · `RNF` não funcional · `RF-LGPD` proteção de dado
 
 Todos os valores abaixo tiveram o contraste **calculado e verificado** pela fórmula de luminância da WCAG. Não altere sem recalcular.
 
-A identidade tem **dois temas**: escuro (preto + azul, padrão) e claro (branco + azul). A barra lateral é azul nos dois. O alto contraste continua existindo só como recurso de acessibilidade (RA05). Contrastes recalculados em 13/11/2026 (sobre o fundo / sobre a superfície).
+A identidade tem **dois temas**: claro (branco + azul, **padrão**) e escuro (grafite + azul). A linguagem visual segue as diretrizes da Apple: fundo cinza bem claro, superfícies brancas com contorno fino e sombra curta, barra lateral translúcida, um único azul de destaque e fonte do sistema. O alto contraste continua existindo só como recurso de acessibilidade (RA05). Contrastes recalculados em 17/11/2026 (sobre o fundo / sobre a superfície).
 
-### Tema claro (branco + azul)
+### Tema claro (padrão: branco + azul)
 
 ```css
---color-bg:                 #FFFFFF
---color-surface:            #EEF4FF
---color-border-subtle:      #D3DFF7  /* decorativo, sem exigência de contraste */
---color-border-interactive: #6B7A99  /* campos e controles — 4.31:1 / 3.91:1 */
---color-text:               #0A1730  /* 17.82:1 / 16.14:1 */
---color-text-muted:         #46557A  /* 7.39:1 / 6.70:1 */
---color-primary:            #1D4ED8  /* links e destaques — 6.70:1 / 6.07:1 */
+--color-bg:                 #F5F5F7  /* tela */
+--color-surface:            #FFFFFF  /* cartões, painéis, campos */
+--color-well:               #EBEBEF  /* "poço": colunas do quadro, trilho das abas */
+--color-border-subtle:      #E2E4E9  /* decorativo, sem exigência de contraste */
+--color-border-interactive: #7D838F  /* campos e controles — 3.50:1 / 3.81:1 */
+--color-text:               #16181D  /* 16.31:1 / 17.76:1 */
+--color-text-muted:         #5B616E  /* 5.71:1 / 6.21:1 */
+--color-primary:            #1D4ED8  /* links e destaques — 6.15:1 / 6.70:1; sobre --primary-tint = 5.28:1 */
 --color-primary-solid:      #1D4ED8  /* fundo de botão; texto branco = 6.70:1 (hover #1E40AF = 8.72:1) */
---color-success:            #1E7B34  /* 5.33:1 / 4.83:1 */
---color-warning:            #96590A  /* 5.63:1 / 5.10:1 */
---color-danger:             #C0261F  /* 5.94:1 / 5.38:1 */
---sidebar-1 / --sidebar-2:  #12379A / #0E2A78  /* texto branco = 10.30:1; secundário #C9D8F7 = 7.19:1 */
+--color-success:            #1E7B34  /* 4.90:1 / 5.33:1 */
+--color-warning:            #96590A  /* 5.17:1 / 5.63:1 */
+--color-danger:             #C0261F  /* 5.45:1 / 5.94:1 */
 ```
 
-### Tema escuro (padrão: preto + azul)
+Chips de prioridade usam a cor do estado com 10% de preenchimento: menor contraste medido é 4.66:1 (verde).
+
+### Tema escuro (grafite + azul)
 
 ```css
---color-bg:                 #05080F
---color-surface:            #0B1529
---color-border-subtle:      #1A2A4A
---color-border-interactive: #5E7093  /* 4.02:1 / 3.65:1 */
---color-text:               #EAF1FF  /* 17.67:1 / 16.06:1 */
---color-text-muted:         #9DB0D0  /* 9.12:1 / 8.28:1 */
---color-primary:            #6BA6FF  /* links e destaques — 8.13:1 / 7.39:1 */
+--color-bg:                 #16181D
+--color-surface:            #212329
+--color-well:               #1C1E23
+--color-border-subtle:      #2E3139
+--color-border-interactive: #6E7584  /* 3.84:1 / 3.40:1 */
+--color-text:               #F1F3F7  /* 15.99:1 / 14.14:1 */
+--color-text-muted:         #A7AEBB  /* 7.96:1 / 7.04:1 */
+--color-primary:            #7AB0FF  /* links e destaques — 8.02:1 / 7.09:1; sobre --primary-tint = 6.00:1 */
 --color-primary-solid:      #2563EB  /* fundo de botão; texto branco = 5.17:1 (hover #1D4ED8 = 6.70:1) */
---color-success:            #4ADE80  /* 11.50:1 / 10.45:1 */
---color-warning:            #F2B44D  /* 10.89:1 / 9.89:1 */
---color-danger:             #FF6B60  /* 7.18:1 / 6.52:1 */
---sidebar-1 / --sidebar-2:  #0A1A3D / #060F26  /* texto branco = 17.10:1; secundário #C9D8F7 = 11.93:1 */
---color-accent:             #FFD23F  /* amarelo da marca: logo, avatar (texto #0B0D14 = 13.44:1) e marcador do item ativo. No alto contraste vira #7A5C00 */
+--color-success:            #4ADE80  /* 10.19:1 / 9.01:1 */
+--color-warning:            #F2B44D  /* 9.65:1 / 8.53:1 */
+--color-danger:             #FF7B72  /* 7.04:1 / 6.23:1 */
+--color-accent:             #FFD23F  /* amarelo da marca: só na logo. No alto contraste vira #7A5C00 */
 ```
 
-**Uso de cor:** azul é a cor de identidade (botões, links, barra, colunas e modos). Verde, âmbar e vermelho aparecem só onde significam estado ou prioridade (RA07), sempre com texto ou símbolo junto. `--color-primary` é para texto e contorno; `--color-primary-solid` é para preenchimento com texto branco.
+**Uso de cor:** azul é a cor de identidade (botões, links, item ativo da barra, destaque "Comece por aqui"). Verde, âmbar e vermelho aparecem só onde significam estado ou prioridade (RA07), sempre com texto ou símbolo junto. `--color-primary` é para texto e contorno; `--color-primary-solid` é para preenchimento com texto branco. Sem faixas laterais coloridas em cartões, sem gradiente e sem brilho.
 
-**Logo:** arquivos oficiais em `frontend/public/` (`logo-escuro.png` texto branco, `logo-claro.png` texto preto, `icone.png` só o Z-raio), montados por `logo()` em `ui.ts`. Na barra lateral azul usa-se sempre a de texto branco; fora dela a versão segue o tema; a barra recolhida mostra só o ícone.
+**Logo:** arquivos oficiais em `frontend/public/` (`logo-escuro.png` texto branco, `logo-claro.png` texto preto, `icone.png` só o Z-raio), montados por `logo()` em `ui.ts`. A versão segue o tema; a barra recolhida mostra só o ícone.
 
 ### Alto contraste
 
@@ -177,13 +179,13 @@ A identidade tem **dois temas**: escuro (preto + azul, padrão) e claro (branco 
 
 ### Armadilhas conhecidas
 
-- **`--color-border-subtle` NÃO pode ser usado em campo de formulário nem em controle.** Ele tem 1.36:1 e reprova o critério 1.4.11. Use `--color-border-interactive`.
+- **`--color-border-subtle` NÃO pode ser usado em campo de formulário nem em controle.** Ele tem 1.27:1 e reprova o critério 1.4.11. Use `--color-border-interactive`.
 - O âmbar original (`#B26B00`) reprovava com 4.20:1. O valor correto é `#96590A`.
 - Nenhuma cor deve ser escrita direto no código. Sempre pelo token, senão a troca de tema quebra.
 
 ### Escala
 
-Espaçamento em múltiplos de 4px (`space-1`=4 … `space-12`=48). Raio: `sm` 6px, `md` 10px, `lg` 16px. Tipografia: Space Grotesk (títulos) + Inter (texto), com fallback declarado. `text-body` 16px/1.5; nunca abaixo de 14px em elemento informativo. **Implementar em unidades relativas**, senão RA04 quebra.
+Espaçamento em múltiplos de 4px (`space-1`=4 … `space-12`=48). Raio: `sm` 6px, `md` 10px, `lg` 16px. Tipografia: fonte do sistema (SF Pro no Mac/iOS, Segoe UI Variable no Windows, Roboto no Android), sem download; títulos com espaçamento entre letras negativo proporcional ao tamanho. `text-body` 16px/1.5; nunca abaixo de 14px em elemento informativo. **Implementar em unidades relativas**, senão RA04 quebra.
 
 ---
 
