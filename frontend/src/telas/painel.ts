@@ -29,35 +29,26 @@ export async function telaPainel(root: HTMLElement) {
 
   montar(root, html`
     <div class="painel">
-      <section class="widgets" aria-label="Resumo">
-        <div class="card">
-          <h3>Foco rápido</h3>
+      <section class="faixa" aria-label="Resumo">
+        <div class="faixa-item">
+          <span class="faixa-rotulo">Foco</span>
           ${ativa
-            ? html`<p>Há uma sessão em andamento.</p><a class="btn" href="#/foco" style="width:100%;justify-content:center">Voltar à sessão</a>`
-            : html`
-              <div class="campo">
-                <label for="w-modo">Modo</label>
-                <select id="w-modo">${modos.map((m) => html`<option value="${m.id}">${m.nome} · ${m.cicloFocoMin}/${m.cicloPausaMin} min</option>`)}</select>
-              </div>
-              <button class="btn" type="button" data-iniciar-foco style="width:100%;justify-content:center">Iniciar sessão</button>`}
+            ? html`<span class="small">Sessão em andamento</span><a class="btn btn-pequeno" href="#/foco">Voltar à sessão</a>`
+            : html`<select id="w-modo" aria-label="Modo de concentração">${modos.map((m) => html`<option value="${m.id}">${m.nome} · ${m.cicloFocoMin}/${m.cicloPausaMin} min</option>`)}</select>
+              <button class="btn btn-pequeno" type="button" data-iniciar-foco>Iniciar</button>`}
         </div>
-        <div class="card">
-          <h3>Sprint da semana</h3>
-          ${sprint
-            ? html`<p><strong>${dataBr(sprint.sprint.dataInicio)} a ${dataBr(sprint.sprint.dataFim)}</strong><br /><span class="muted small">${sprint.tarefas} ${sprint.tarefas === 1 ? 'tarefa' : 'tarefas'} · ${sprint.horasPlanejadas}h planejadas</span></p>`
-            : html`<p class="muted small">Sem sprint nesta semana. O Blitz escolhe as tarefas por prazo, prioridade e esforço.</p>`}
-          <form class="linha" data-form-sprint style="align-items:flex-end">
-            <div class="campo" style="margin:0;flex:0 1 7rem"><label for="w-cap">Horas/semana</label><input id="w-cap" name="capacidadeHoras" type="number" min="1" max="168" value="20" /></div>
-            <button class="btn btn-secundario btn-pequeno" type="submit">${sprint ? 'Replanejar' : 'Planejar'}</button>
-          </form>
-        </div>
-        <div class="card">
-          <h3>Hoje</h3>
-          ${metricas ? html`
-            <p><strong style="font-family:var(--font-title);font-size:1.5rem">${duracao(metricas.hojeSegundos)}</strong><br /><span class="muted small">de foco hoje</span></p>
-            <p class="small">${duracao(metricas.semanaSegundos)} nos últimos 7 dias · ${metricas.tarefasConcluidas} ${metricas.tarefasConcluidas === 1 ? 'tarefa concluída' : 'tarefas concluídas'}</p>
-            <a href="#/metricas">Ver métricas completas</a>`
-            : html`<p class="muted small">Métricas indisponíveis no momento.</p>`}
+        <form class="faixa-item" data-form-sprint>
+          <span class="faixa-rotulo">Sprint</span>
+          <span class="small muted">${sprint ? `${dataBr(sprint.sprint.dataInicio).slice(0, 5)} a ${dataBr(sprint.sprint.dataFim).slice(0, 5)} · ${sprint.tarefas} ${sprint.tarefas === 1 ? 'tarefa' : 'tarefas'} · ${sprint.horasPlanejadas}h` : 'não planejada'}</span>
+          <input id="w-cap" name="capacidadeHoras" type="number" min="1" max="168" value="20" aria-label="Horas disponíveis na semana" title="Horas disponíveis na semana" />
+          <span class="small muted" aria-hidden="true">h/sem</span>
+          <button class="btn btn-secundario btn-pequeno" type="submit">${sprint ? 'Replanejar' : 'Planejar'}</button>
+        </form>
+        <div class="faixa-item">
+          <span class="faixa-rotulo">Hoje</span>
+          ${metricas
+            ? html`<span class="small"><strong>${duracao(metricas.hojeSegundos)}</strong> de foco · ${duracao(metricas.semanaSegundos)} na semana · ${metricas.tarefasConcluidas} ${metricas.tarefasConcluidas === 1 ? 'concluída' : 'concluídas'}</span><a class="small" href="#/metricas">Métricas</a>`
+            : html`<span class="small muted">Métricas indisponíveis.</span>`}
         </div>
       </section>
 
@@ -72,7 +63,7 @@ export async function telaPainel(root: HTMLElement) {
           ${listaAtual ? html`
             <button type="button" class="btn btn-fantasma btn-pequeno" data-renomear-lista>Renomear</button>
             <button type="button" class="btn btn-fantasma btn-pequeno" data-excluir-lista ${listas.length <= 1 ? raw('disabled title="Mantenha pelo menos uma lista"') : ''}>Excluir lista</button>
-            <button type="button" class="btn" data-nova-tarefa>+ Nova tarefa</button>` : ''}
+            <button type="button" class="btn btn-pequeno" data-nova-tarefa>+ Nova tarefa</button>` : ''}
         </div>
         ${listaAtual ? html`
           <form class="entrada-rapida" data-rapida novalidate>
@@ -85,12 +76,16 @@ export async function telaPainel(root: HTMLElement) {
       </section>
 
       <aside class="coluna-assistente" aria-label="Assistente de IA">
-        <div class="card"><h3 style="display:flex;justify-content:space-between">Assistente <a class="small" href="#/assistente">Abrir</a></h3><div data-chat></div></div>
+        <div class="card">
+          <div class="cabecalho-assistente"><h3>Assistente</h3><a class="small" href="#/assistente">Abrir tela</a>
+            <button type="button" class="btn btn-fantasma btn-pequeno" data-recolher-assistente aria-label="Recolher assistente" title="Recolher assistente">⟩</button></div>
+          <div data-chat></div>
+        </div>
       </aside>
     </div>
 
     <!-- abaixo de 1440px a coluna do assistente some e vira uma gaveta aberta por este botão -->
-    <button type="button" class="btn fab" data-abrir-assistente aria-expanded="false" aria-controls="gaveta-assistente">Assistente</button>
+    <button type="button" class="btn btn-pequeno fab" data-abrir-assistente aria-expanded="false">Assistente</button>
     <aside class="gaveta" id="gaveta-assistente" aria-label="Assistente de IA" hidden>
       <div class="gaveta-cabecalho"><h3 style="margin:0">Assistente</h3><a class="small" href="#/assistente">Abrir tela</a><button type="button" class="btn btn-fantasma btn-pequeno" data-fechar-assistente aria-label="Fechar assistente">✕</button></div>
       <div data-chat-gaveta></div>
@@ -331,7 +326,16 @@ export async function telaPainel(root: HTMLElement) {
   const gaveta = q(root, '[data-gaveta], .gaveta');
   let chatMontado = false;
   const fecharGaveta = () => { gaveta.hidden = true; fab.setAttribute('aria-expanded', 'false'); fab.focus(); };
+  // Assistente retrátil (telas largas): recolher esconde a coluna e o quadro ocupa tudo; a escolha fica guardada neste navegador.
+  const painelEl = q(root, '.painel');
+  const largo = () => matchMedia('(min-width: 1440px)').matches;
+  const guardar = (aberto: boolean) => { try { localStorage.setItem('blitz.assistente', aberto ? '1' : '0'); } catch { /* sem armazenamento */ } };
+  let recolhido = false;
+  try { recolhido = localStorage.getItem('blitz.assistente') === '0'; } catch { /* padrão: aberto */ }
+  painelEl.classList.toggle('sem-assistente', recolhido);
+  q(root, '[data-recolher-assistente]').addEventListener('click', () => { painelEl.classList.add('sem-assistente'); guardar(false); fab.focus(); });
   fab.addEventListener('click', () => {
+    if (largo()) { painelEl.classList.remove('sem-assistente'); guardar(true); q(root, '[data-recolher-assistente]').focus(); return; }
     gaveta.hidden = false; fab.setAttribute('aria-expanded', 'true');
     if (!chatMontado) { chatMontado = true; montarChat(q(gaveta, '[data-chat-gaveta]'), true, () => telaPainel(root)); }
     q(gaveta, '[data-fechar-assistente]').focus();
