@@ -1,7 +1,9 @@
 package br.com.blitz.ia;
 
 import br.com.blitz.auth.UsuarioAutenticado;
-import br.com.blitz.tarefa.Prioridade;
+import br.com.blitz.modo.ModoRepository;
+import br.com.blitz.sessao.SessaoFoco;
+import br.com.blitz.sessao.SessaoRepository;
 import br.com.blitz.tarefa.StatusTarefa;
 import br.com.blitz.tarefa.Tarefa;
 import br.com.blitz.tarefa.TarefaRepository;
@@ -16,7 +18,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -35,13 +36,15 @@ public class IaController {
     private final GeminiClient gemini;
     private final ConversaRepository conversas;
     private final TarefaRepository tarefas;
+    private final SessaoRepository sessoes;
+    private final ModoRepository modos;
     private final long limiteTokensDia;
     private final String sal;
 
-    IaController(GeminiClient gemini, ConversaRepository conversas, TarefaRepository tarefas,
+    IaController(GeminiClient gemini, ConversaRepository conversas, TarefaRepository tarefas, SessaoRepository sessoes, ModoRepository modos,
                  @Value("${blitz.ia.limite-tokens-dia}") long limiteTokensDia,
                  @Value("${blitz.ia.pseudonimo-sal}") String sal) {
-        this.gemini = gemini; this.conversas = conversas; this.tarefas = tarefas;
+        this.gemini = gemini; this.conversas = conversas; this.tarefas = tarefas; this.sessoes = sessoes; this.modos = modos;
         this.limiteTokensDia = limiteTokensDia; this.sal = sal;
     }
 
@@ -69,21 +72,24 @@ public class IaController {
         long inicio = System.nanoTime();
         Map<String, Object> limite = limiteDe(ua.id());
 
-        // RNF09: ao atingir o limite, avisar quando renova e não bloquear o resto do app (o front segue funcionando)
-        if ((long) limite.get("usados") >= limiteTokensDia) {
-            registrar(ua.id(), 0, inicio, "LIMITE");
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
-                "mensagem", "Você atingiu o limite diário do assistente. Ele volta em " + limite.get("renovaEm") + ". As demais funções continuam disponíveis.",
-                "limite", limite));
-        }
-
-        List<Tarefa> pendentes = tarefas.todasDoUsuario(ua.id()).stream().filter(t -> t.status != StatusTarefa.CONCLUIDA).toList();
+        List<Tarefa> todas = tarefas.todasDoUsuario(ua.id());
+        List<Tarefa> pendentes = todas.stream().filter(t -> t.status != StatusTarefa.CONCLUIDA).toList();
 
         String resposta;
         int tokens = 0;
         boolean fallback = false;
         List<Long> sugeridas = List.of();   // ids das tarefas na ordem sugerida: o front oferece "Focar na primeira" e "Aplicar ordem no quadro"
-        try {
+        boolean noLimite = (long) limite.get("usados") >= limiteTokensDia;
+        if (!gemini.configurado() || noLimite) {
+            // RF17 sem chave da IA, ou RNF09 com o limite diário atingido: o assistente local responde (0 token, não pesa no limite)
+            AssistenteLocal.Resposta r = AssistenteLocal.responder(m.mensagem(), contexto(ua.id(), todas));
+            fallback = true;
+            resposta = noLimite
+                ? "Você atingiu o limite diário da IA (renova " + quando((String) limite.get("renovaEm")) + "). Resposta automática:\n\n" + r.texto()
+                : r.texto();
+            sugeridas = r.ordem();
+            registrar(ua.id(), 0, inicio, noLimite ? "LIMITE_LOCAL" : "LOCAL");
+        } else try {
             List<GeminiClient.Turno> hist = new ArrayList<>();
             for (Map<String, Object> h : historico(ua)) {
                 if (h.get("resposta") == null) continue;
@@ -97,10 +103,11 @@ public class IaController {
             tokens = r.tokens();
             registrar(ua.id(), tokens, inicio, "OK");
         } catch (Exception e) {
-            // RF17 / achado IA-04: provedor indisponível => resposta alternativa determinística. Log só com a classe do erro.
+            // RF17 / achado IA-04: provedor indisponível => assistente local. Log só com a classe do erro.
+            AssistenteLocal.Resposta r = AssistenteLocal.responder(m.mensagem(), contexto(ua.id(), todas));
             fallback = true;
-            resposta = respostaAlternativa(pendentes);
-            sugeridas = ordenadas(pendentes).stream().limit(5).map(t -> t.id).toList();
+            resposta = r.texto();
+            sugeridas = r.ordem();
             registrar(ua.id(), 0, inicio, "FALLBACK:" + e.getClass().getSimpleName());
         }
 
@@ -142,13 +149,25 @@ public class IaController {
         return sb.toString();
     }
 
-    /** RF17: ordenação determinística (prazo mais próximo, prioridade mais alta, menor esforço). Também cobre RF16 sem IA. */
-    static List<Tarefa> ordenadas(List<Tarefa> pendentes) {
-        Comparator<Tarefa> ordem = Comparator
-            .comparing((Tarefa t) -> t.prazo, Comparator.nullsLast(Comparator.naturalOrder()))
-            .thenComparing(t -> peso(t.prioridade))
-            .thenComparing(t -> t.horasEstimadas, Comparator.nullsLast(Comparator.naturalOrder()));
-        return pendentes.stream().sorted(ordem).toList();
+    /** Dados para o assistente local: tarefas, foco dos últimos 7 dias e por tarefa, modos visíveis. Nada sai do servidor. */
+    private AssistenteLocal.Contexto contexto(Long u, List<Tarefa> todas) {
+        LocalDate hoje = LocalDate.now(AssistenteLocal.FUSO);
+        Instant inicioHoje = hoje.atStartOfDay(AssistenteLocal.FUSO).toInstant();
+        List<SessaoFoco> semana = sessoes.findByUsuarioIdAndFimIsNotNullAndInicioAfter(u, hoje.minusDays(6).atStartOfDay(AssistenteLocal.FUSO).toInstant());
+        long focoSemana = 0, focoHoje = 0;
+        for (SessaoFoco s : semana) {
+            long d = s.duracaoSegundos == null ? 0 : s.duracaoSegundos;
+            focoSemana += d;
+            if (!s.inicio.isBefore(inicioHoje)) focoHoje += d;
+        }
+        Map<Long, Long> porTarefa = new HashMap<>();
+        for (Object[] l : sessoes.focoPorTarefa(u)) porTarefa.put(((Number) l[0]).longValue(), ((Number) l[1]).longValue());
+        List<AssistenteLocal.Modo> ms = modos.visiveisPara(u).stream().map(x -> new AssistenteLocal.Modo(x.nome, x.cicloFocoMin, x.cicloPausaMin)).toList();
+        return new AssistenteLocal.Contexto(todas, porTarefa, focoHoje, focoSemana, semana.size(), ms, hoje);
+    }
+
+    private static String quando(String isoInstant) {
+        return java.time.format.DateTimeFormatter.ofPattern("dd/MM 'às' HH:mm").format(Instant.parse(isoInstant).atZone(AssistenteLocal.FUSO));
     }
 
     /** Linha "ORDEM: 12,7,3" (ou "#12, #7") no fim da resposta do modelo; só ids de tarefas pendentes da pessoa valem. */
@@ -164,24 +183,6 @@ public class IaController {
         }
         return ids;
     }
-
-    static String respostaAlternativa(List<Tarefa> pendentes) {
-        if (pendentes.isEmpty())
-            return "O assistente de IA está indisponível no momento. Você ainda não tem tarefas pendentes: cadastre a primeira no quadro e eu ajudo a priorizar.";
-        List<Tarefa> top = ordenadas(pendentes).stream().limit(5).toList();
-        StringBuilder sb = new StringBuilder("O assistente de IA está indisponível no momento. Sugestão automática com base em prazo, prioridade e esforço:\n");
-        int i = 1;
-        for (Tarefa t : top) {
-            sb.append(i++).append(". ").append(t.titulo).append(" (prioridade ").append(rotulo(t.prioridade));
-            if (t.prazo != null) sb.append(", prazo ").append(t.prazo.format(DATA_BR));
-            sb.append(")\n");
-        }
-        return sb.toString().trim();
-    }
-
-    private static final java.time.format.DateTimeFormatter DATA_BR = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static String rotulo(Prioridade p) { return p == Prioridade.ALTA ? "alta" : p == Prioridade.MEDIA ? "média" : "baixa"; }
-    private static int peso(Prioridade p) { return p == Prioridade.ALTA ? 0 : p == Prioridade.MEDIA ? 1 : 2; }
 
     // ---------- limite (RNF09) ----------
 

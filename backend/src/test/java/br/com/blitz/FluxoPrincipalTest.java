@@ -136,7 +136,7 @@ class FluxoPrincipalTest {
         mvc.perform(post("/api/ia/mensagem").session(SESSAO).contentType(MediaType.APPLICATION_JSON).content(j("{'mensagem':'O que fazer agora?'}")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.fallback").value(true))
-            .andExpect(jsonPath("$.resposta", containsString("indisponível")))
+            .andExpect(jsonPath("$.resposta", containsString("Tarefa para a IA")))   // assistente local usa as tarefas da pessoa
             .andExpect(jsonPath("$.tarefasSugeridas[0]").value(idIa));          // RF16: ordem sugerida vem como ids
         chamar(patch("/api/tarefas/ordem").contentType(MediaType.APPLICATION_JSON).content("{\"ids\":[" + idIa + "]}"), 204);
         mvc.perform(get("/api/tarefas").session(SESSAO)).andExpect(jsonPath("$[0].id").value(idIa));

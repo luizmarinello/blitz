@@ -6,6 +6,7 @@ import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar,
 import { montarChat } from './assistente';
 import { formTarefa, lerTarefa } from './tarefa';
 import { interpretarRapida } from '../rapida';
+import { recomendada as melhorTarefa } from '../prioridade';
 
 const STATUS: Status[] = ['BACKLOG', 'EM_ANDAMENTO', 'CONCLUIDA'];
 let listaAtual: number | null = Number(sessionStorage.getItem('blitz.lista')) || null;
@@ -148,10 +149,8 @@ export async function telaPainel(root: HTMLElement) {
       return;
     }
     const d = hoje();
-    // RF16: mesmo critério da resposta alternativa do assistente (prazo, prioridade, esforço) escolhe o cartão "Comece por aqui"
-    const peso: Record<string, number> = { ALTA: 0, MEDIA: 1, BAIXA: 2 };
-    const recomendada = daLista.filter((t) => t.status !== 'CONCLUIDA').sort((a, b) =>
-      (a.prazo ?? '9999').localeCompare(b.prazo ?? '9999') || peso[a.prioridade] - peso[b.prioridade] || (a.horasEstimadas ?? 1e9) - (b.horasEstimadas ?? 1e9))[0]?.id;
+    // RF16: mesmo critério do assistente (prazo, prioridade, andamento, esforço) escolhe o cartão "Comece por aqui"
+    const recomendada = melhorTarefa(daLista, d);
     const simbolo: Record<Status, string> = { BACKLOG: '○', EM_ANDAMENTO: '◐', CONCLUIDA: '✓' };   // RA07: status com símbolo, não só cor
     montar(quadro, html`
       <p class="sr-only" id="dica-quadro">Arraste os cartões entre as colunas ou use os botões de seta de cada cartão (teclado).</p>

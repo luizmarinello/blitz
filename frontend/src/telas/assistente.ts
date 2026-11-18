@@ -3,7 +3,7 @@ import { api, ApiErro, type Conversa, type LimiteIa } from '../api';
 import { navegar } from '../router';
 import { carregando, dataHoraBr, html, montar, q, toast } from '../ui';
 
-const SUGESTOES = ['O que devo fazer agora?', 'Ordene minhas tarefas por urgência', 'Qual tarefa posso terminar em menos de 1 hora?'];
+const SUGESTOES = ['O que devo fazer agora?', 'Tenho 30 minutos, o que dá para fazer?', 'O que está atrasado?', 'Como foi minha semana?', 'Vai dar tempo esta semana?', 'Qual modo de foco devo usar?'];
 
 export async function telaAssistente(root: HTMLElement) {
   montar(root, html`
@@ -24,14 +24,14 @@ export async function montarChat(el: HTMLElement, compacto: boolean, aoOrdenar?:
 
   montar(el, html`
     <div class="chat">
-      ${limite && !limite.configurado ? html`<div class="alerta alerta-info small" role="status">Chave da IA não configurada no servidor: as respostas são geradas automaticamente a partir das suas tarefas (modo alternativo).</div>` : ''}
+      ${limite && !limite.configurado ? html`<div class="alerta alerta-info small" role="status">Modo automático: sem IA generativa conectada, o assistente responde a partir das suas tarefas, prazos, estimativas e tempo de foco. Pergunte "ajuda" para ver exemplos.</div>` : ''}
       <div class="mensagens" data-mensagens aria-live="polite" aria-label="Conversa">
         ${historico.length === 0 ? html`<p class="muted small" style="text-align:center">Nenhuma conversa ainda. Experimente uma sugestão abaixo.</p>` : ''}
         ${historico.slice(compacto ? -6 : 0).map((c) => html`
           <div class="msg msg-usuario">${c.mensagem}</div>
           ${c.resposta ? html`<div class="msg msg-ia">${c.resposta}<div class="muted small" style="margin-top:0.25rem">${dataHoraBr(c.dataHora)}</div></div>` : ''}`)}
       </div>
-      <div class="sugestoes">${SUGESTOES.slice(0, compacto ? 2 : 3).map((s) => html`<button class="btn btn-fantasma btn-pequeno" type="button" data-sugestao>${s}</button>`)}</div>
+      <div class="sugestoes">${SUGESTOES.slice(0, compacto ? 3 : SUGESTOES.length).map((s) => html`<button class="btn btn-fantasma btn-pequeno" type="button" data-sugestao>${s}</button>`)}</div>
       <form novalidate>
         <textarea name="mensagem" rows="1" maxlength="2000" required aria-label="Sua mensagem" placeholder="Pergunte ao assistente…"></textarea>
         <button class="btn" type="submit" aria-label="Enviar">Enviar</button>
@@ -46,6 +46,7 @@ export async function montarChat(el: HTMLElement, compacto: boolean, aoOrdenar?:
   const limiteEl = q(el, '[data-limite]');
   const mostrarLimite = (l: LimiteIa | null) => {
     if (!l) return;
+    if (!l.configurado) { limiteEl.textContent = ''; return; }   // modo automático não gasta tokens
     const pct = l.maximo ? Math.min(100, Math.round((l.usados / l.maximo) * 100)) : 0;
     limiteEl.textContent = `Uso do assistente hoje: ${pct}% (${l.usados} de ${l.maximo} tokens)${pct >= 100 ? ` · renova em ${dataHoraBr(l.renovaEm)}` : ''}`;
   };
@@ -64,7 +65,7 @@ export async function montarChat(el: HTMLElement, compacto: boolean, aoOrdenar?:
     campo.value = ''; btn.disabled = true; campo.disabled = true;
     try {
       const r = await api.iaMensagem(texto);
-      espera.outerHTML = html`<div class="msg msg-ia ${r.fallback ? 'msg-fallback' : ''}">${r.resposta}${r.fallback && r.limite.configurado ? html`<div class="small" style="margin-top:0.25rem;color:var(--color-warning)">Resposta automática: a IA não respondeu.</div>` : ''}</div>
+      espera.outerHTML = html`<div class="msg msg-ia ${r.fallback && r.limite.configurado ? 'msg-fallback' : ''}">${r.resposta}${r.fallback && r.limite.configurado ? html`<div class="small" style="margin-top:0.25rem;color:var(--color-warning)">Resposta automática: a IA não respondeu.</div>` : ''}</div>
         ${r.tarefasSugeridas?.length ? html`<div class="msg-acoes">
           <button class="btn btn-pequeno" type="button" data-focar="${r.tarefasSugeridas[0]}">▶ Focar na primeira agora</button>
           <button class="btn btn-secundario btn-pequeno" type="button" data-ordenar="${r.tarefasSugeridas.join(',')}">Aplicar ordem no quadro</button>
