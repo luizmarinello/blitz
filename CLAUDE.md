@@ -22,10 +22,14 @@ A lacuna que o produto explora: gestores de tarefas (Todoist, Trello, Notion) or
 
 | Camada | Tecnologia |
 |---|---|
-| Front-end | React 18 + TypeScript, Tailwind CSS, Framer Motion |
-| Back-end | Supabase (PostgreSQL + Edge Functions) |
-| IA | Gemini, chamado **sempre** via Edge Function, nunca direto do navegador |
-| Protótipo atual | https://blitz-my-flow.lovable.app |
+| Front-end | TypeScript + Vite, sem framework (pasta `frontend/`), CSS por tokens |
+| Back-end | Java 21 + Spring Boot 3.5, migrações com Flyway (pasta `backend/`) |
+| Banco | PostgreSQL no Neon (produção, Ohio); Postgres embutido nos testes e no `DevEmbutido` |
+| IA | Gemini, chamado **sempre** pelo back-end, nunca direto do navegador; sem chave, o assistente local (`AssistenteLocal`) responde |
+| Publicação | Render: `blitz-api` (Docker) e `blitz-front` (site estático), sem auto-deploy; CI no GitHub Actions |
+| Produto no ar | https://blitz-front.onrender.com (o protótipo do Lovable, https://blitz-my-flow.lovable.app, é só histórico) |
+
+**Decisão de stack (ADR 002, 29/10/2026):** depois de uma tentativa em React + Supabase (branch `blitz-v2`, 05 a 13/10), o MVP ficou na base da `main` (Java/Spring + TypeScript), que já tinha as funções principais e testes. Registro no cartão "ADR 002" da Sprint 7 no Trello.
 
 **Decisão de portabilidade (ADR 001):** estratégia web-first em três camadas.
 1. Aplicação web responsiva — base do produto, única fonte de verdade da UI.
@@ -34,7 +38,7 @@ A lacuna que o produto explora: gestores de tarefas (Todoist, Trello, Notion) or
 
 **Fora de escopo nesta versão:** aplicativos nativos iOS/Android.
 
-**Regra de arquitetura:** a credencial do provedor de IA nunca vai para o cliente. A Edge Function é obrigatória como intermediária.
+**Regra de arquitetura:** a credencial do provedor de IA nunca vai para o cliente. O back-end é obrigatório como intermediário.
 
 ---
 
