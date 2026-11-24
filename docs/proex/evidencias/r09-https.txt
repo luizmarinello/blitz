@@ -1,0 +1,16 @@
+=== R09 HTTPS (24/11/2026)
+Domínio: 18-225-117-192.sslip.io (DNS gratuito que resolve para o IP público da EC2)
+Certificado: Let's Encrypt, emitido com certbot --nginx pelo infra/aws/ativar-https.sh,
+  sem e-mail no cadastro (--register-unsafely-without-email, minimização de dados)
+  issuer=C=US, O=Let's Encrypt, CN=YE1
+  subject=CN=18-225-117-192.sslip.io
+  notBefore=Nov 24 16:53:08 2026 GMT   notAfter=Feb 22 16:53:07 2027 GMT
+Renovação: automática pelo certbot.timer do systemd
+Verificação externa (do PC do integrante):
+  GET http://18-225-117-192.sslip.io/          -> 301 https://18-225-117-192.sslip.io/
+  GET https://18-225-117-192.sslip.io/api/auth/saude -> 200
+  Resposta da API traz Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+  scripts/smoke.sh com BASE=https://18-225-117-192.sslip.io -> TODOS OS PASSOS PASSARAM
+Aplicação: COOKIE_SECURE=true e APP_URL=https://18-225-117-192.sslip.io em /etc/blitz/blitz.env
+Limitação: o nome depende do IP; se a instância for parada e ligada, o IP muda e é preciso
+  rodar o ativar-https.sh de novo com o novo nome (reboot mantém o IP).

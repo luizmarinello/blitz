@@ -1,0 +1,11 @@
+=== R12 backup e restauração (24/11/2026)
+1. Na EC2: sudo /opt/blitz-admin/backup.sh
+   /var/backups/blitz/blitz-20261124-1745.tar.gz (15K, root:adm 640)
+   /var/backups/blitz/blitz-env-20261124-1745.SEGREDO (600, só root; NÃO sai da EC2 junto com o pacote)
+2. Cópia para fora da EC2 (scp para o PC do integrante):
+   conteúdo: LEIA-ME.txt, blitz.service, nginx-blitz.conf, blitz-banco.dump (75 KB, pg_dump -Fc)
+   sha256 5a6fd1506fb191e03d8a2da598e174c2c01014e1127022d9eabe1d0ae52ad89f
+3. Restauração da CÓPIA EXTERNA num banco separado (blitz_restauracao_teste) com pg_restore
+   contagem             usuarios | tarefas | listas | migracoes_flyway
+   blitz (original)            1 |       0 |      0 | 3
+   blitz_restauracao_teste     1 |       0 |      0 | 3   -> idêntico

@@ -1,0 +1,8 @@
+=== R08 reinício controlado (24/11/2026, horários da EC2 em UTC)
+boot anterior: 2026-11-24 17:40:56
+sudo systemctl reboot pedido às 17:47:38
+boot novo:     2026-11-24 17:47:49
+blitz.service Started às 17:47:58 (sem intervenção manual)
+API respondendo de fora (GET /api/auth/saude = 200) ~30 s após o pedido
+is-active  nginx/blitz/postgresql: active active active
+is-enabled nginx/blitz/postgresql: enabled enabled enabled

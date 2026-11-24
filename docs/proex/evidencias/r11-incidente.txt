@@ -1,0 +1,12 @@
+=== R11 incidente controlado
+-- antes: 200
+inactive
+-- com a API parada: HTTP 502  | site estático: HTTP 200
+2026/11/24 17:48:15 [error] 673#673: *7 connect() failed (111: Connection refused) while connecting to upstream, client: IP_OCULTADO, server: _, request: "GET /api/auth/saude HTTP/1.1", upstream: "http://127.0.0.1:8080/api/auth/saude", host: "18.225.117.192"
+2026/11/24 17:48:41 [error] 673#673: *20 connect() failed (111: Connection refused) while connecting to upstream, client: IP_OCULTADO, server: _, request: "GET /api/auth/saude HTTP/1.1", upstream: "http://127.0.0.1:8080/api/auth/saude", host: "18.225.117.192"
+-- recuperado: HTTP 200 em ~15s
+-- teste do Restart=on-failure (kill -9 no java):
+1
+active
+Nov 24 17:49:06 ip-172-31-10-255 systemd[1]: blitz.service: Main process exited, code=killed, status=9/KILL
+Nov 24 17:49:11 ip-172-31-10-255 systemd[1]: blitz.service: Scheduled restart job, restart counter is at 1.

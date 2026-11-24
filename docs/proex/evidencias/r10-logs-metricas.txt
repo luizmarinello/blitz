@@ -1,0 +1,40 @@
+=== R10 logs e métricas (24/11/2026 17:49 UTC)
+-- uptime
+ 17:49:30 up 1 min,  1 user,  load average: 1.33, 0.46, 0.16
+-- memória
+               total        used        free      shared  buff/cache   available
+Mem:           1.9Gi       748Mi       945Mi        21Mi       391Mi       1.1Gi
+Swap:             0B          0B          0B
+-- disco
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        19G  2.7G   16G  15% /
+-- serviços
+● blitz.service - Blitz - API (Java 21 / Spring Boot)
+     Active: active (running) since Tue 2026-11-24 17:49:11 UTC; 19s ago
+      Tasks: 39 (limit: 1741)
+     Memory: 305.1M (peak: 310M)
+● nginx.service - A high performance web server and a reverse proxy server
+     Active: active (running) since Tue 2026-11-24 17:47:55 UTC; 1min 34s ago
+      Tasks: 3 (limit: 1741)
+     Memory: 4.8M (peak: 5.3M)
+● postgresql.service - PostgreSQL RDBMS
+     Active: active (exited) since Tue 2026-11-24 17:47:58 UTC; 1min 31s ago
+-- portas em escuta
+Local Peer
+0.0.0.0:22 users:(("sshd"),("systemd"))
+0.0.0.0:80 users:(("nginx"),("nginx"),("nginx"))
+127.0.0.54:53 users:(("systemd-resolve"))
+127.0.0.1:5432 users:(("postgres"))
+127.0.0.53%lo:53 users:(("systemd-resolve"))
+[::ffff:127.0.0.1]:8080 users:(("java"))
+[::]:22 users:(("sshd"),("systemd"))
+[::]:80 users:(("nginx"),("nginx"),("nginx"))
+-- nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+-- últimas linhas do journal do blitz
+2026-11-24T17:49:20+00:00 ip-172-31-10-255 java[1584]: 2026-11-24T17:49:20.864Z  INFO 1584 --- [blitz] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory
+2026-11-24T17:49:21+00:00 ip-172-31-10-255 java[1584]: 2026-11-24T17:49:21.993Z  INFO 1584 --- [blitz] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applic
+2026-11-24T17:49:24+00:00 ip-172-31-10-255 java[1584]: 2026-11-24T17:49:24.933Z  INFO 1584 --- [blitz] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configu
+2026-11-24T17:49:25+00:00 ip-172-31-10-255 java[1584]: 2026-11-24T17:49:25.549Z  INFO 1584 --- [blitz] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) w
+2026-11-24T17:49:25+00:00 ip-172-31-10-255 java[1584]: 2026-11-24T17:49:25.575Z  INFO 1584 --- [blitz] [           main] br.com.blitz.BlitzApplication            : Started BlitzApplication in 13.331 s

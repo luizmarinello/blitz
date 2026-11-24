@@ -1,0 +1,13 @@
+Início: 14:48:33
+GET / -> HTTP 200 em 0.299274s
+GET / -> HTTP 200 em 0.294879s
+GET / -> HTTP 200 em 0.349838s
+GET /api/auth/saude -> HTTP 200 em 0.347972s
+GET /api/auth/saude -> HTTP 200 em 0.335583s
+Fim: 14:48:34
+Na EC2, conferir as 5 linhas no log:  sudo tail -n 10 /var/log/nginx/access.log
+IP_OCULTADO - - [24/Nov/2026:17:48:34 +0000] "GET / HTTP/1.1" 200 1866 "-" "curl/8.21.0"
+IP_OCULTADO - - [24/Nov/2026:17:48:34 +0000] "GET / HTTP/1.1" 200 1866 "-" "curl/8.21.0"
+IP_OCULTADO - - [24/Nov/2026:17:48:34 +0000] "GET / HTTP/1.1" 200 1866 "-" "curl/8.21.0"
+IP_OCULTADO - - [24/Nov/2026:17:48:34 +0000] "GET /api/auth/saude HTTP/1.1" 200 25 "-" "curl/8.21.0"
+IP_OCULTADO - - [24/Nov/2026:17:48:35 +0000] "GET /api/auth/saude HTTP/1.1" 200 25 "-" "curl/8.21.0"

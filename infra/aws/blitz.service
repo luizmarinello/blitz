@@ -1,0 +1,28 @@
+# /etc/systemd/system/blitz.service  (R08)
+# Back-end Java/Spring do Blitz. Roda como usuário sem privilégio "blitz", escuta só em 127.0.0.1:8080
+# (o Nginx é a única porta de entrada) e volta sozinho após falha ou reboot.
+
+[Unit]
+Description=Blitz - API (Java 21 / Spring Boot)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=blitz
+Group=blitz
+WorkingDirectory=/opt/blitz
+# Segredos ficam fora do repositório, legíveis só por root e pelo grupo blitz (chmod 640)
+EnvironmentFile=/etc/blitz/blitz.env
+ExecStart=/usr/bin/java -Xms128m -Xmx512m -jar /opt/blitz/blitz.jar
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+
+# Endurecimento básico
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
