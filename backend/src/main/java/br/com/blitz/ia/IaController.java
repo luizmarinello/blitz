@@ -48,7 +48,26 @@ public class IaController {
         this.limiteTokensDia = limiteTokensDia; this.sal = sal;
     }
 
-    public record Mensagem(@NotBlank(message = "Escreva uma mensagem.") @Size(max = 2000, message = "Mensagem longa demais (máx. 2000).") String mensagem) {}
+    /**
+     * tela/itens: onde a pessoa está e as partes da tela que o Bolt pode apontar (data-bolt no front). Só rótulos fixos do
+     * produto, nunca conteúdo da pessoa (RNF-LGPD07); o formato é conferido antes de ir para o prompt.
+     */
+    public record Mensagem(@NotBlank(message = "Escreva uma mensagem.") @Size(max = 2000, message = "Mensagem longa demais (máx. 2000).") String mensagem,
+                           @Size(max = 40) String tela,
+                           @Size(max = 20) List<@Size(max = 40) String> itens) {}
+
+    private static final java.util.regex.Pattern ROTULO = java.util.regex.Pattern.compile("^[\\p{L}0-9 ]{1,40}$");
+    static List<String> rotulos(List<String> l) {
+        return l == null ? List.of() : l.stream().filter(x -> x != null && ROTULO.matcher(x).matches()).distinct().toList();
+    }
+
+    /** "Limpar a conversa" do Bolt: some o texto; data e tokens ficam para o limite diário (RNF09). */
+    @DeleteMapping("/historico")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<Void> limparHistorico(@AuthenticationPrincipal UsuarioAutenticado ua) {
+        conversas.apagarConteudoDe(ua.id(), RetencaoConversas.MARCA);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping("/limite")
     public Map<String, Object> limite(@AuthenticationPrincipal UsuarioAutenticado ua) { return limiteDe(ua.id()); }
@@ -97,7 +116,8 @@ public class IaController {
                 hist.add(new GeminiClient.Turno("model", (String) h.get("resposta")));
             }
             if (hist.size() > 8) hist = hist.subList(hist.size() - 8, hist.size());
-            GeminiClient.Resposta r = gemini.gerar(instrucao(pendentes), hist, m.mensagem());
+            String tela = m.tela() != null && ROTULO.matcher(m.tela()).matches() ? m.tela() : null;
+            GeminiClient.Resposta r = gemini.gerar(instrucao(pendentes, tela, rotulos(m.itens())), hist, m.mensagem());
             sugeridas = extrairOrdem(r.texto(), pendentes);
             resposta = ORDEM.matcher(r.texto()).replaceAll("").strip();   // a linha ORDEM é só para o front, não para a pessoa
             tokens = r.tokens();
@@ -129,14 +149,27 @@ public class IaController {
 
     // ---------- payload mínimo (RNF-LGPD07): só título, prioridade, prazo, horas, status ----------
 
-    private static String instrucao(List<Tarefa> pendentes) {
+    static String instrucao(List<Tarefa> pendentes, String tela, List<String> itens) {
         StringBuilder sb = new StringBuilder("""
             Você é o assistente do Blitz, um app de foco e produtividade. Responda sempre em português do Brasil, de forma direta e curta.
             Sua função principal é ajudar a pessoa a decidir o que fazer AGORA, ordenando as tarefas pendentes por prazo, prioridade e esforço.
             Quando sugerir ordem, liste no máximo 5 itens numerados e explique cada escolha em uma frase.
             Nesse caso, termine a resposta com uma última linha no formato exato "ORDEM: 12,7,3", com os ids [#id] das tarefas na ordem sugerida, sem comentar essa linha.
             Não invente tarefas: use apenas as listadas abaixo. Se não houver tarefas, sugira cadastrar a primeira.
-            Hoje é """).append(LocalDate.now()).append(".\n\nTarefas pendentes:\n");
+            Seu nome é Bolt. Você também explica as telas do Blitz e mostra onde fica cada coisa.
+            Hoje é """).append(LocalDate.now()).append(".\n");
+        if (tela != null) {
+            sb.append("\nA pessoa está na tela ").append(tela).append('.');
+            String sobre = TelasBlitz.descricao(tela);
+            if (sobre != null) sb.append(" Sobre ela: ").append(sobre.replace("[[", "").replace("]]", ""));
+            sb.append('\n');
+        }
+        if (!itens.isEmpty()) {
+            sb.append("Partes desta tela que você pode mostrar: ").append(String.join(", ", itens)).append(".\n")
+              .append("Quando citar uma delas, escreva o nome exatamente entre colchetes duplos, por exemplo [[")
+              .append(itens.get(0)).append("]]. Não use colchetes duplos para mais nada.\n");
+        }
+        sb.append("\nTarefas pendentes:\n");
         if (pendentes.isEmpty()) sb.append("(nenhuma)\n");
         for (Tarefa t : pendentes) {
             sb.append("- [#").append(t.id).append("] ").append(t.titulo)

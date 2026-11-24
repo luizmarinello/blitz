@@ -233,7 +233,17 @@ Implementar rate limit por usuário baseado em `conversa_ia.tokens_usados`. O cu
 13 Privacidade e dados  14 Exportar dados  15 Excluir conta
 ```
 
-**Layout do painel (≥1280px):** três colunas — widgets à esquerda, quadro ao centro, assistente à direita. O quadro central é a única coluna que permanece visível em qualquer largura.
+**Layout do painel:** faixa de widgets (Foco, Sprint, Hoje) em cima e o quadro ocupando a largura toda. Desde 24/11/2026 o assistente não é mais uma coluna à direita: é o **Bolt**, agente flutuante no canto de todas as telas autenticadas (`frontend/src/bolt.ts` e `bolt.css`, visual e comportamento inspirados na BELLA do BellaDesk, reescritos para o Blitz).
+
+**Bolt (UC04, RF15–RF17):**
+- **Orbe:** azul da marca com visor grafite e um raio no topo. O visor mostra o estado: pensando, falando, contente ou cochilando.
+- **Conversa:** clicar no orbe abre a conversa, que mostra em qual tela a pessoa está e oferece sugestões dessa tela.
+- **Explicar as telas:** a explicação de cada tela fica em `TelasBlitz.java` e é usada pelo assistente local e pelo Gemini.
+- **Apontar na tela:** quando a resposta cita `[[Nome]]`, o nome vira um botão que leva até o elemento com `data-bolt="Nome"` e o destaca.
+- **Dica de primeira visita:** na primeira vez em cada tela, o Bolt oferece explicá-la.
+- **Esconder na lateral:** dispensado, ele fica espiando pela borda da barra lateral.
+- **Tela 09:** mostra a mesma conversa dentro da página.
+- **Regra para novas telas:** toda parte nova que o Bolt deve apontar precisa de `data-bolt` com o mesmo nome usado na explicação da tela.
 
 **Regras de navegação:** toda tela autenticada alcançável em ≤2 passos do painel; nenhuma tela é caminho sem retorno (exceção deliberada: excluir conta encerra a sessão).
 
@@ -245,7 +255,7 @@ Implementar rate limit por usuário baseado em `conversa_ia.tokens_usados`. O cu
 
 ### Já existe no protótipo
 
-Quadro de tarefas, widgets (Pomodoro, métricas, estratégias), assistente de IA com streaming, formulário de atividades, organização automática em sprints, temas claro/escuro.
+Quadro de tarefas, widgets (Pomodoro, métricas, estratégias), agente Bolt (assistente de IA flutuante que explica as telas e aponta onde fica cada coisa), formulário de atividades, organização automática em sprints, temas claro/escuro.
 
 ### Pendente — ordenado por prioridade
 

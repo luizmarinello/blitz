@@ -163,6 +163,8 @@ final class AssistenteLocal {
 
     static Resposta responder(String mensagem, Contexto c) {
         String norm = normalizar(mensagem);
+        String tela = TelasBlitz.pedidoDeExplicacao(norm);   // dica de primeira visita / chip "Me explica a tela X" do Bolt
+        if (tela != null) return new Resposta(tela, List.of());
         Tarefa citada = mencionada(norm, c.tarefas());
         // as palavras do título citado não contam como intenção ("e o relatório de status?" é sobre a tarefa, não um resumo)
         String semTitulo = norm;
@@ -189,7 +191,7 @@ final class AssistenteLocal {
         };
     }
 
-    private static final String SEM_TAREFAS = "Você não tem tarefas pendentes. Cadastre a primeira no quadro (por exemplo, \"Revisar slides !alta @sexta 2h\" na entrada rápida) e eu ajudo a decidir por onde começar.";
+    private static final String SEM_TAREFAS = "Você não tem tarefas pendentes. Cadastre a primeira na [[Entrada rápida]] do Painel (por exemplo, \"Revisar slides !alta @sexta 2h\") e eu ajudo a decidir por onde começar.";
 
     private static final String AJUDA_TEXTO = """
         Eu respondo a partir das suas tarefas, prazos, estimativas e tempo de foco. Experimente:

@@ -98,14 +98,14 @@ export async function telaFoco(root: HTMLElement, params: Params) {
       <h1>Nova sessão de foco</h1>
       <p class="muted">Escolha o modo e, se quiser, a tarefa. O tempo registrado vira métrica mesmo que a tarefa seja apagada depois.</p>
       <form novalidate>
-        <div class="campo">
+        <div class="campo" data-bolt="Modo">
           <label for="f-modo">Modo de concentração</label>
           <select id="f-modo" name="modoId" required>
             ${modos.map((m) => html`<option value="${m.id}" ${String(m.id) === modoSel ? 'selected' : ''}>${m.nome} · ${m.cicloFocoMin} min foco / ${m.cicloPausaMin} min pausa</option>`)}
           </select>
           <span class="small"><a href="#/modos">Gerenciar modos</a></span>
         </div>
-        <div class="campo">
+        <div class="campo" data-bolt="Tarefa">
           <label for="f-tarefa">Tarefa <span class="muted small">(opcional)</span></label>
           <select id="f-tarefa" name="tarefaId">
             <option value="">Sem tarefa específica</option>
@@ -113,7 +113,7 @@ export async function telaFoco(root: HTMLElement, params: Params) {
           </select>
         </div>
         <p class="erro" data-erro-geral role="alert"></p>
-        <div class="acoes"><button class="btn" type="submit">Iniciar sessão</button><a class="btn btn-fantasma" href="#/">Voltar ao painel</a></div>
+        <div class="acoes"><button class="btn" type="submit" data-bolt="Iniciar sessão">Iniciar sessão</button><a class="btn btn-fantasma" href="#/">Voltar ao painel</a></div>
       </form>
     </section>`);
   const form = q<HTMLFormElement>(root, 'form');
@@ -151,9 +151,9 @@ function desenharTimer(root: HTMLElement, sessao: Sessao, modo: Modo, tarefa?: T
         ${id.mensagemPausa ? html`<p class="mensagem-pausa" data-mensagem-pausa>${id.mensagemPausa}</p>` : ''}
       </div>
       <div class="acoes" style="justify-content:center">
-        <button class="btn" type="button" data-pausar aria-pressed="false">Pausar</button>
+        <button class="btn" type="button" data-pausar aria-pressed="false" data-bolt="Pausar">Pausar</button>
         <button class="btn btn-fantasma" type="button" data-pular>Pular fase</button>
-        <button class="btn btn-secundario" type="button" data-encerrar>Encerrar sessão</button>
+        <button class="btn btn-secundario" type="button" data-encerrar data-bolt="Encerrar sessão">Encerrar sessão</button>
       </div>
       <p style="text-align:center;margin-top:var(--space-4)"><button class="btn btn-fantasma btn-pequeno" type="button" data-descartar>Descartar sessão</button></p>
       <p class="muted small" style="text-align:center">Pausar interrompe a contagem; só o tempo em foco é registrado. Você pode navegar pelo app: o relógio continua.</p>

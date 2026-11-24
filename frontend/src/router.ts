@@ -2,6 +2,7 @@
 import { api, type Usuario } from './api';
 import { aplicarPrefs, prefsLocais } from './prefs';
 import { html, logo, montar, q, raw, toast } from './ui';
+import { boltNaTela } from './bolt';
 
 export type Params = Record<string, string>;
 export type Tela = (root: HTMLElement, params: Params) => void | Promise<void>;
@@ -53,10 +54,14 @@ export async function renderizar() {
       await r.tela(tela, params);
     } catch (e) {
       montar(tela, html`<div class="estado estado-erro" role="alert"><strong>Algo deu errado</strong>${e instanceof Error ? e.message : ''}</div>`);
+    } finally {
+      // o Bolt vive fora de #app: continua aberto entre as telas e só lê os data-bolt depois que a tela terminou de montar
+      if (app.contains(tela)) boltNaTela(caminho.split('/')[0], estado.usuario);
     }
     return;
   }
   montar(app, html`<div class="estado"><strong>Página não encontrada</strong><a href="#/">Voltar ao painel</a></div>`);
+  boltNaTela('?', estado.usuario);
 }
 
 // UC12 atalho: alterna claro/escuro (alto contraste continua pela tela de acessibilidade)

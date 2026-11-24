@@ -9,7 +9,7 @@ export function telaPerfil(root: HTMLElement) {
   montar(root, html`
     <section class="card" style="max-width:36rem;margin:auto">
       <h1>Perfil e preferências</h1>
-      <form novalidate data-form-nome>
+      <form novalidate data-form-nome data-bolt="Dados da conta">
         <h2>Dados da conta</h2>
         <p class="erro" data-erro-geral role="alert"></p>
         <div class="campo"><label for="p-nome">Nome</label><input id="p-nome" name="nome" value="${u.nome}" required maxlength="180" /><span class="erro" data-erro="nome"></span></div>
@@ -17,7 +17,7 @@ export function telaPerfil(root: HTMLElement) {
         <button class="btn" type="submit">Salvar nome</button>
       </form>
       <hr style="border:0;border-top:1px solid var(--color-border-subtle);margin:var(--space-6) 0" />
-      <form novalidate data-form-senha>
+      <form novalidate data-form-senha data-bolt="Trocar senha">
         <h2>Trocar senha</h2>
         <p class="erro" data-erro-geral role="alert"></p>
         <div class="campo"><label for="s-atual">Senha atual</label><input id="s-atual" name="atual" type="password" autocomplete="current-password" required /><span class="erro" data-erro="atual"></span></div>
@@ -64,13 +64,13 @@ export async function telaAcessibilidade(root: HTMLElement) {
       <h1>Preferências de acessibilidade</h1>
       <p class="muted">As mudanças são aplicadas na hora, em todas as telas, para você conferir antes de salvar.</p>
       <form novalidate>
-        <fieldset style="border:0;padding:0;margin:0 0 var(--space-4)">
+        <fieldset style="border:0;padding:0;margin:0 0 var(--space-4)" data-bolt="Tema">
           <legend style="font-weight:600;margin-bottom:var(--space-2)">Tema</legend>
           ${radio('tema', 'CLARO', 'Claro', 'fundo branco')}
           ${radio('tema', 'ESCURO', 'Escuro', 'fundo escuro, menos brilho')}
           ${radio('tema', 'ALTO_CONTRASTE', 'Alto contraste', 'preto no branco, contraste 21:1')}
         </fieldset>
-        <fieldset style="border:0;padding:0;margin:0 0 var(--space-4)">
+        <fieldset style="border:0;padding:0;margin:0 0 var(--space-4)" data-bolt="Tamanho da fonte">
           <legend style="font-weight:600;margin-bottom:var(--space-2)">Tamanho da fonte</legend>
           ${radio('tamanhoFonte', 'PEQUENO', 'Pequeno', '15 px')}
           ${radio('tamanhoFonte', 'MEDIO', 'Médio', '16 px, padrão')}

@@ -33,12 +33,12 @@ export async function telaModos(root: HTMLElement) {
   montar(root, html`
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3)">
       <h1 style="margin:0">Modos de concentração</h1>
-      <button class="btn" type="button" data-novo>+ Novo modo</button>
+      <button class="btn" type="button" data-novo data-bolt="Novo modo">+ Novo modo</button>
     </div>
     <p class="muted">Cada modo define o ciclo de foco e pausa e muda a sessão: <strong>Pomodoro</strong> marca os ciclos em bolinhas, <strong>Profundo</strong> esconde o secundário e não interrompe com avisos, <strong>Relax</strong> dá destaque à pausa. Os predefinidos não podem ser alterados; crie o seu.</p>
-    <h2>Predefinidos</h2>
+    <h2 data-bolt="Predefinidos">Predefinidos</h2>
     <ul class="lista-modos">${predefinidos.map(cartao)}</ul>
-    <h2 style="margin-top:var(--space-6)">Meus modos</h2>
+    <h2 style="margin-top:var(--space-6)" data-bolt="Meus modos">Meus modos</h2>
     ${meus.length ? html`<ul class="lista-modos">${meus.map(cartao)}</ul>`
       : vazio('Você ainda não criou um modo', 'Personalize os ciclos de foco e pausa do seu jeito.', html`<button class="btn" type="button" data-novo>+ Novo modo</button>`)}
 

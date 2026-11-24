@@ -13,7 +13,7 @@ export async function telaPrivacidade(root: HTMLElement) {
       <h1>Privacidade e dados</h1>
       <p class="muted">Você é o titular dos seus dados. Aqui estão as informações da LGPD e os seus direitos do art. 18.</p>
 
-      <h2>O que guardamos e para quê</h2>
+      <h2 data-bolt="O que guardamos">O que guardamos e para quê</h2>
       <table class="tabela">
         <thead><tr><th scope="col">Dado</th><th scope="col">Finalidade</th><th scope="col">Base legal</th></tr></thead>
         <tbody>
@@ -23,16 +23,16 @@ export async function telaPrivacidade(root: HTMLElement) {
           <tr><td>Preferências de acessibilidade</td><td>Adaptar a interface</td><td>Execução de contrato</td></tr>
         </tbody>
       </table>
-      <p class="small muted" style="margin-top:var(--space-3)">Ao assistente de IA (Google Gemini) enviamos apenas título, prioridade, prazo, horas e status das tarefas. Nunca nome, e-mail ou identificador. <a href="#/termos">Política completa</a>.</p>
+      <p class="small muted" style="margin-top:var(--space-3)">Ao assistente de IA (Google Gemini) enviamos apenas título, prioridade, prazo, horas e status das tarefas, além do nome da tela aberta. Nunca nome, e-mail ou identificador. <a href="#/termos">Política completa</a>.</p>
 
-      <h2 style="margin-top:var(--space-6)">Seus consentimentos</h2>
+      <h2 style="margin-top:var(--space-6)" data-bolt="Seus consentimentos">Seus consentimentos</h2>
       ${cons.length === 0 ? html`<p class="muted">Nenhum registro encontrado.</p>` : html`
         <table class="tabela">
           <thead><tr><th scope="col">Versão da política</th><th scope="col">Aceito em</th><th scope="col">Canal</th></tr></thead>
           <tbody>${cons.map((c) => html`<tr><td>${c.versaoPolitica}</td><td>${dataHoraBr(c.aceitoEm)}</td><td>${c.canal}</td></tr>`)}</tbody>
         </table>`}
 
-      <h2 style="margin-top:var(--space-6)">Seus direitos</h2>
+      <h2 style="margin-top:var(--space-6)" data-bolt="Seus direitos">Seus direitos</h2>
       <div class="acoes" style="margin-top:0">
         <a class="btn btn-fantasma" href="#/perfil">Corrigir meus dados</a>
         <a class="btn btn-fantasma" href="#/privacidade/exportar">Exportar meus dados</a>

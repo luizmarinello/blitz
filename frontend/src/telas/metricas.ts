@@ -34,7 +34,7 @@ export async function telaMetricas(root: HTMLElement) {
   montar(root, html`
     <h1>Métricas e histórico</h1>
     ${m.semanaSegundos > 0 ? html`
-      <section class="card resumo-semana" aria-labelledby="r-titulo">
+      <section class="card resumo-semana" aria-labelledby="r-titulo" data-bolt="Sua semana">
         <h2 id="r-titulo">Sua semana</h2>
         <p class="resumo-frase">Você focou <strong>${duracao(m.semanaSegundos)}</strong> em ${m.sessoesSemana} ${m.sessoesSemana === 1 ? 'sessão' : 'sessões'}, em ${diasComFoco} dos últimos 7 dias.</p>
         <ul class="fatos">
@@ -44,7 +44,7 @@ export async function telaMetricas(root: HTMLElement) {
           ${tituloTop ? html`<li><span class="fato-valor fato-texto">${tituloTop}</span><span class="muted small">tarefa com mais foco · ${duracao(topTarefa![1])}</span></li>` : ''}
         </ul>
       </section>` : ''}
-    <div class="kpis">
+    <div class="kpis" data-bolt="Números">
       <div class="kpi"><div class="valor">${duracao(m.hojeSegundos)}</div><div class="muted small">de foco hoje</div></div>
       <div class="kpi"><div class="valor">${duracao(m.semanaSegundos)}</div><div class="muted small">nos últimos 7 dias</div></div>
       <div class="kpi"><div class="valor">${m.sessoesSemana}</div><div class="muted small">sessões na semana · média ${duracao(m.mediaSessaoSemanaSegundos)}</div></div>
@@ -52,7 +52,7 @@ export async function telaMetricas(root: HTMLElement) {
       <div class="kpi"><div class="valor">${m.tarefasConcluidas}</div><div class="muted small">tarefas concluídas</div></div>
     </div>
 
-    <section class="card" aria-labelledby="g-titulo">
+    <section class="card" aria-labelledby="g-titulo" data-bolt="Foco por dia">
       <h2 id="g-titulo">Foco por dia (últimos 7 dias)</h2>
       ${m.semanaSegundos === 0 ? vazio('Sem sessões nesta semana', 'Inicie uma sessão de foco e o gráfico começa a aparecer aqui.', html`<a class="btn" href="#/foco">Iniciar sessão</a>`) : html`
         <div class="grafico" role="img" aria-label="Gráfico de barras: ${m.porDia.map((d) => `${dataBr(d.dia)} ${duracao(d.segundos)}`).join(', ')}">
@@ -65,7 +65,7 @@ export async function telaMetricas(root: HTMLElement) {
         </div>`}
     </section>
 
-    <section class="card" aria-labelledby="s-titulo">
+    <section class="card" aria-labelledby="s-titulo" data-bolt="Sessões recentes">
       <h2 id="s-titulo">Sessões recentes</h2>
       ${sessoes.length === 0 ? html`<p class="muted">Nenhuma sessão encerrada ainda.</p>` : html`
         <div style="overflow:auto"><table class="tabela">
@@ -74,7 +74,7 @@ export async function telaMetricas(root: HTMLElement) {
         </table></div>`}
     </section>
 
-    <section class="card" aria-labelledby="c-titulo">
+    <section class="card" aria-labelledby="c-titulo" data-bolt="Tarefas concluídas">
       <h2 id="c-titulo">Tarefas concluídas</h2>
       ${concluidas.length === 0 ? html`<p class="muted">Nenhuma tarefa concluída ainda. Elas ficam guardadas aqui quando você as marcar como concluídas.</p>` : html`
         <div style="overflow:auto"><table class="tabela">

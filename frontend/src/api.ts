@@ -134,7 +134,9 @@ export const api = {
   metricas: () => chamar<Metricas>('GET', '/api/metricas'),
 
   // UC04
-  iaMensagem: (mensagem: string) => chamar<RespostaIa>('POST', '/api/ia/mensagem', { mensagem }),
+  /** tela e itens: onde a pessoa está e as partes da tela que o Bolt pode apontar (só rótulos do produto, RNF-LGPD07). */
+  iaMensagem: (mensagem: string, tela?: string, itens: string[] = []) => chamar<RespostaIa>('POST', '/api/ia/mensagem', { mensagem, tela: tela ?? null, itens }),
+  iaLimpar: () => chamar<void>('DELETE', '/api/ia/historico'),
   iaHistorico: () => chamar<Conversa[]>('GET', '/api/ia/historico'),
   iaLimite: () => chamar<LimiteIa>('GET', '/api/ia/limite'),
 

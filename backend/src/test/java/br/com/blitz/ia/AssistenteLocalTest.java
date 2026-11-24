@@ -105,6 +105,15 @@ class AssistenteLocalTest {
         assertTrue(desconhecida.contains("ajuda") && desconhecida.contains("Pagar boleto"), desconhecida);
     }
 
+    @Test void explicaATelaComOsItensQueOBoltAponta() {
+        String r = responder("Me explica a tela Métricas: para que ela serve e o que dá para fazer aqui?");
+        assertTrue(r.contains("[[Sua semana]]") && r.contains("[[Foco por dia]]"), r);
+        assertTrue(responder("me explica a tela painel").contains("[[Comece por aqui]]"));
+        // tela desconhecida não vira explicação inventada: cai nas intenções normais
+        assertFalse(responder("Me explica a tela Financeiro").contains("[["));
+        assertEquals(TelasBlitz.descricao("Painel"), TelasBlitz.descricao("painel"));
+    }
+
     @Test void semTarefasOrientaOPrimeiroPasso() {
         AssistenteLocal.Resposta r = AssistenteLocal.responder("O que devo fazer agora?", ctx(List.of()));
         assertTrue(r.texto().contains("Cadastre a primeira"));

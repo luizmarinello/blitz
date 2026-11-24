@@ -18,6 +18,10 @@ public interface ConversaRepository extends JpaRepository<ConversaIa, Long> {
     @Modifying
     @Query("update ConversaIa c set c.mensagem = :marca, c.resposta = null where c.dataHora < :limite and c.mensagem <> :marca")
     int apagarConteudoAntes(Instant limite, String marca);
+    /** "Limpar a conversa" do Bolt: apaga o texto, mas mantém data e tokens, que sustentam o limite diário (RNF09). */
+    @Modifying
+    @Query("update ConversaIa c set c.mensagem = :marca, c.resposta = null where c.usuarioId = :u and c.mensagem <> :marca")
+    int apagarConteudoDe(Long u, String marca);
     List<ConversaIa> findByUsuarioIdOrderByDataHoraAsc(Long u);
     void deleteByUsuarioId(Long u);
 }

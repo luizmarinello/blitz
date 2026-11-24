@@ -1,9 +1,8 @@
-// Tela 05 Painel principal: widgets | quadro | assistente (≥1280px). Só o quadro fica visível em larguras menores.
+// Tela 05 Painel principal: faixa de widgets + quadro. O assistente é o Bolt, flutuante em todas as telas (bolt.ts).
 // UC02 (listas e tarefas), RF05–RF08, RN02. Mover por botões = equivalente por teclado do drag and drop (US-02 pendente).
 import { api, type FocoTarefa, type Lista, type Metricas, type Modo, type Sessao, type SprintAtual, type Status, type Tarefa, type TarefaEntrada } from '../api';
 import { navegar } from '../router';
 import { carregando, confirmar, dataBr, duracao, erroEstado, hoje, html, montar, mostrarErros, q, raw, rotuloPrioridade, rotuloStatus, toast, vazio } from '../ui';
-import { montarChat } from './assistente';
 import { formTarefa, lerTarefa } from './tarefa';
 import { interpretarRapida } from '../rapida';
 import { recomendada as melhorTarefa } from '../prioridade';
@@ -31,21 +30,21 @@ export async function telaPainel(root: HTMLElement) {
   montar(root, html`
     <div class="painel">
       <section class="faixa" aria-label="Resumo">
-        <div class="faixa-item">
+        <div class="faixa-item" data-bolt="Foco rápido">
           <span class="faixa-rotulo">Foco</span>
           ${ativa
             ? html`<span class="small">Sessão em andamento</span><a class="btn btn-pequeno" href="#/foco">Voltar à sessão</a>`
             : html`<select id="w-modo" aria-label="Modo de concentração">${modos.map((m) => html`<option value="${m.id}">${m.nome} · ${m.cicloFocoMin}/${m.cicloPausaMin} min</option>`)}</select>
               <button class="btn btn-pequeno" type="button" data-iniciar-foco>Iniciar</button>`}
         </div>
-        <form class="faixa-item" data-form-sprint>
+        <form class="faixa-item" data-form-sprint data-bolt="Sprint">
           <span class="faixa-rotulo">Sprint</span>
           <span class="small muted">${sprint ? `${dataBr(sprint.sprint.dataInicio).slice(0, 5)} a ${dataBr(sprint.sprint.dataFim).slice(0, 5)} · ${sprint.tarefas} ${sprint.tarefas === 1 ? 'tarefa' : 'tarefas'} · ${sprint.horasPlanejadas}h` : 'não planejada'}</span>
           <input id="w-cap" name="capacidadeHoras" type="number" min="1" max="168" value="20" aria-label="Horas disponíveis na semana" title="Horas disponíveis na semana" />
           <span class="small muted" aria-hidden="true">h/sem</span>
           <button class="btn btn-secundario btn-pequeno" type="submit">${sprint ? 'Replanejar' : 'Planejar'}</button>
         </form>
-        <div class="faixa-item">
+        <div class="faixa-item" data-bolt="Hoje">
           <span class="faixa-rotulo">Hoje</span>
           ${metricas
             ? html`<span class="small"><strong>${duracao(metricas.hojeSegundos)}</strong> de foco · ${duracao(metricas.semanaSegundos)} na semana · ${metricas.tarefasConcluidas} ${metricas.tarefasConcluidas === 1 ? 'concluída' : 'concluídas'}</span><a class="small" href="#/metricas">Métricas</a>`
@@ -56,7 +55,7 @@ export async function telaPainel(root: HTMLElement) {
       <section class="quadro-area" aria-labelledby="quadro-titulo">
         <div class="quadro-cabecalho">
           <h1 id="quadro-titulo" style="margin:0">Quadro</h1>
-          <div class="abas" role="tablist" aria-label="Listas">
+          <div class="abas" role="tablist" aria-label="Listas" data-bolt="Listas">
             ${listas.map((l) => html`<button role="tab" aria-selected="${l.id === listaAtual}" data-lista="${l.id}">${l.nome}</button>`)}
             <button type="button" class="btn-pequeno btn btn-fantasma" data-nova-lista aria-label="Criar nova lista">+ Lista</button>
           </div>
@@ -64,33 +63,19 @@ export async function telaPainel(root: HTMLElement) {
           ${listaAtual ? html`
             <button type="button" class="btn btn-fantasma btn-pequeno" data-renomear-lista>Renomear</button>
             <button type="button" class="btn btn-fantasma btn-pequeno" data-excluir-lista ${listas.length <= 1 ? raw('disabled title="Mantenha pelo menos uma lista"') : ''}>Excluir lista</button>
-            <button type="button" class="btn btn-pequeno" data-nova-tarefa>+ Nova tarefa</button>` : ''}
+            <button type="button" class="btn btn-pequeno" data-nova-tarefa data-bolt="Nova tarefa">+ Nova tarefa</button>` : ''}
         </div>
         ${listaAtual ? html`
-          <form class="entrada-rapida" data-rapida novalidate>
+          <form class="entrada-rapida" data-rapida novalidate data-bolt="Entrada rápida">
             <input name="texto" aria-label="Adicionar tarefa rápida" aria-describedby="dica-rapida" autocomplete="off" maxlength="200"
               placeholder="Adicionar tarefa… ex.: Revisar slides !alta @sexta 2h" />
             <button class="btn btn-pequeno" type="submit">Adicionar</button>
             <span class="small muted" id="dica-rapida">Enter cria na hora. Atalhos: <code>!alta</code> <code>!baixa</code> prioridade · <code>@hoje</code> <code>@amanhã</code> <code>@sexta</code> <code>@25/11</code> prazo · <code>2h</code> horas estimadas</span>
           </form>` : ''}
-        <div data-quadro></div>
+        <div data-quadro data-bolt="Quadro"></div>
       </section>
 
-      <aside class="coluna-assistente" aria-label="Assistente de IA">
-        <div class="card">
-          <div class="cabecalho-assistente"><h3>Assistente</h3><a class="small" href="#/assistente">Abrir tela</a>
-            <button type="button" class="btn btn-fantasma btn-pequeno" data-recolher-assistente aria-label="Recolher assistente" title="Recolher assistente"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16M9 10l2 2-2 2"/></svg></button></div>
-          <div data-chat></div>
-        </div>
-      </aside>
     </div>
-
-    <!-- abaixo de 1440px a coluna do assistente some e vira uma gaveta aberta por este botão -->
-    <button type="button" class="btn btn-pequeno fab" data-abrir-assistente aria-expanded="false">Assistente</button>
-    <aside class="gaveta" id="gaveta-assistente" aria-label="Assistente de IA" hidden>
-      <div class="gaveta-cabecalho"><h3 style="margin:0">Assistente</h3><a class="small" href="#/assistente">Abrir tela</a><button type="button" class="btn btn-fantasma btn-pequeno" data-fechar-assistente aria-label="Fechar assistente">✕</button></div>
-      <div data-chat-gaveta></div>
-    </aside>
 
     <dialog data-dlg-tarefa aria-labelledby="dlg-tarefa-titulo">
       <h2 id="dlg-tarefa-titulo">Nova tarefa</h2>
@@ -121,14 +106,14 @@ export async function telaPainel(root: HTMLElement) {
           <p style="margin-inline:auto">Organize as tarefas e decida com o assistente o que fazer agora. Três passos para começar:</p>
           <ol class="passos">
             <li><span class="passo-n" aria-hidden="true">1</span><div><strong>Crie uma tarefa</strong><br /><span class="small">Título, prioridade, prazo e horas estimadas. O quadro mostra o que fazer, o que está em andamento e o que já foi.</span></div></li>
-            <li><span class="passo-n" aria-hidden="true">2</span><div><strong>Pergunte ao assistente</strong><br /><span class="small">"O que devo fazer agora?" Ele ordena por prazo, prioridade e esforço e marca o cartão "Comece por aqui".</span></div></li>
+            <li><span class="passo-n" aria-hidden="true">2</span><div><strong>Pergunte ao Bolt</strong><br /><span class="small">Clique no Bolt, no canto da tela, e pergunte "O que devo fazer agora?". Ele ordena por prazo, prioridade e esforço e marca o cartão "Comece por aqui".</span></div></li>
             <li><span class="passo-n" aria-hidden="true">3</span><div><strong>Inicie uma sessão de foco</strong><br /><span class="small">Escolha o modo (Pomodoro, Profundo, Relax) e a tarefa. O tempo focado vira métrica, mesmo se a tarefa for apagada.</span></div></li>
           </ol>
           <div class="acoes" style="justify-content:center">
             <button class="btn" type="button" data-exemplos>Criar 3 tarefas de exemplo</button>
             <button class="btn btn-fantasma" type="button" data-nova-tarefa>+ Criar minha primeira tarefa</button>
           </div>
-        </div>` : vazio('Esta lista está vazia', 'Cadastre a primeira tarefa e o assistente ajuda a decidir por onde começar.',
+        </div>` : vazio('Esta lista está vazia', 'Cadastre a primeira tarefa e o Bolt ajuda a decidir por onde começar.',
         html`<button class="btn" type="button" data-nova-tarefa>+ Nova tarefa</button>`));
       quadro.querySelector('[data-nova-tarefa]')?.addEventListener('click', abrirNovaTarefa);
       quadro.querySelector<HTMLButtonElement>('[data-exemplos]')?.addEventListener('click', async (e) => {
@@ -137,7 +122,7 @@ export async function telaPainel(root: HTMLElement) {
         const em = (dias: number) => { const x = new Date(); x.setDate(x.getDate() + dias); return x.toISOString().slice(0, 10); };
         const exemplos: TarefaEntrada[] = [
           { titulo: 'Arrastar este cartão para "Em andamento"', descricao: 'Use o mouse ou o botão de seta do cartão (teclado).', prioridade: 'ALTA', prazo: em(1), horasEstimadas: 0.5 },
-          { titulo: 'Perguntar ao assistente o que fazer agora', descricao: 'Clique em Assistente e escolha uma das sugestões.', prioridade: 'MEDIA', prazo: em(3), horasEstimadas: 0.25 },
+          { titulo: 'Perguntar ao assistente o que fazer agora', descricao: 'Clique no Bolt, no canto da tela, e escolha uma das sugestões.', prioridade: 'MEDIA', prazo: em(3), horasEstimadas: 0.25 },
           { titulo: 'Iniciar uma sessão de foco nesta tarefa', descricao: 'Clique em Focar neste cartão e escolha o modo Pomodoro.', prioridade: 'BAIXA', prazo: null, horasEstimadas: 1 },
         ];
         try {
@@ -165,7 +150,7 @@ export async function telaPainel(root: HTMLElement) {
               const i = STATUS.indexOf(t.status);
               const atrasada = t.prazo && t.prazo < d && t.status !== 'CONCLUIDA';
               return html`
-                <li class="tarefa prio-${t.prioridade} ${t.status === 'CONCLUIDA' ? 'concluida' : ''} ${t.id === recomendada ? 'destaque' : ''}" draggable="true" data-id="${t.id}" aria-describedby="dica-quadro">
+                <li class="tarefa prio-${t.prioridade} ${t.status === 'CONCLUIDA' ? 'concluida' : ''} ${t.id === recomendada ? 'destaque' : ''}" draggable="true" data-id="${t.id}" data-bolt-tarefa="${t.id}" ${t.id === recomendada ? raw('data-bolt="Comece por aqui"') : ''} aria-describedby="dica-quadro">
                   <a class="tarefa-titulo" href="#/tarefas/${t.id}">${t.titulo}</a>
                   <div class="tarefa-meta">
                     ${t.id === recomendada ? html`<span class="chip chip-destaque" title="Sugestão por prazo, prioridade e esforço">Comece por aqui</span>` : ''}
@@ -317,28 +302,4 @@ export async function telaPainel(root: HTMLElement) {
   root.querySelector('[data-iniciar-foco]')?.addEventListener('click', () => {
     navegar(`#/foco?modo=${q<HTMLSelectElement>(root, '#w-modo').value}&iniciar=1`);
   });
-  const chat = root.querySelector<HTMLElement>('[data-chat]');
-  if (chat) montarChat(chat, true, () => telaPainel(root));
-
-  // gaveta do assistente (telas < 1440px): monta o chat só na primeira abertura; Esc fecha e devolve o foco ao botão
-  const fab = q<HTMLButtonElement>(root, '[data-abrir-assistente]');
-  const gaveta = q(root, '[data-gaveta], .gaveta');
-  let chatMontado = false;
-  const fecharGaveta = () => { gaveta.hidden = true; fab.setAttribute('aria-expanded', 'false'); fab.focus(); };
-  // Assistente retrátil (telas largas): recolher esconde a coluna e o quadro ocupa tudo; a escolha fica guardada neste navegador.
-  const painelEl = q(root, '.painel');
-  const largo = () => matchMedia('(min-width: 1440px)').matches;
-  const guardar = (aberto: boolean) => { try { localStorage.setItem('blitz.assistente', aberto ? '1' : '0'); } catch { /* sem armazenamento */ } };
-  let recolhido = false;
-  try { recolhido = localStorage.getItem('blitz.assistente') === '0'; } catch { /* padrão: aberto */ }
-  painelEl.classList.toggle('sem-assistente', recolhido);
-  q(root, '[data-recolher-assistente]').addEventListener('click', () => { painelEl.classList.add('sem-assistente'); guardar(false); fab.focus(); });
-  fab.addEventListener('click', () => {
-    if (largo()) { painelEl.classList.remove('sem-assistente'); guardar(true); q(root, '[data-recolher-assistente]').focus(); return; }
-    gaveta.hidden = false; fab.setAttribute('aria-expanded', 'true');
-    if (!chatMontado) { chatMontado = true; montarChat(q(gaveta, '[data-chat-gaveta]'), true, () => telaPainel(root)); }
-    q(gaveta, '[data-fechar-assistente]').focus();
-  });
-  q(gaveta, '[data-fechar-assistente]').addEventListener('click', fecharGaveta);
-  gaveta.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharGaveta(); });
 }
