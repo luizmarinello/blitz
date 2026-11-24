@@ -72,6 +72,8 @@ if grep -q "managed by Certbot" /etc/nginx/sites-available/blitz 2>/dev/null; th
 else
   install -m 644 nginx-blitz.conf /etc/nginx/sites-available/blitz
 fi
+# Não divulga a versão do Nginx em nenhum site, inclusive no redirect da porta 80 (Ubuntu 26.04 traz "server_tokens build")
+sed -i -E 's/^(\s*)#?\s*server_tokens .*/\1server_tokens off;/' /etc/nginx/nginx.conf
 ln -sf /etc/nginx/sites-available/blitz /etc/nginx/sites-enabled/blitz
 rm -f /etc/nginx/sites-enabled/default
 nginx -t

@@ -12,6 +12,11 @@ nginx -t && systemctl reload nginx
 
 # --redirect: o Certbot cria o bloco 443 e manda todo acesso HTTP para HTTPS
 certbot --nginx -d "$D" --non-interactive --agree-tos --register-unsafely-without-email --redirect
+# O redirect do Certbot só vale para quem digita o nome; quem digita o IP levaria 404. Redireciona qualquer acesso HTTP.
+sed -i -e '/if (\$host = .*) {/,/} # managed by Certbot/d' \
+       -e "s|return 404; # managed by Certbot|return 301 https://$D\$request_uri;   # qualquer acesso HTTP, inclusive pelo IP|" \
+       /etc/nginx/sites-available/blitz
+nginx -t && systemctl reload nginx
 
 # Com HTTPS o cookie de sessão passa a ser Secure; links de e-mail usam o domínio
 sed -i -e 's/^COOKIE_SECURE=.*/COOKIE_SECURE=true/' -e "s#^APP_URL=.*#APP_URL=https://$D#" /etc/blitz/blitz.env

@@ -1,0 +1,36 @@
+=== R03 instância (24/11/2026 19:13 UTC)
+tipo: t3.small | AMI: ami-0f441bd6af0596ef7 | zona: us-east-2a | IP privado: 172.31.10.255
+-- whoami
+luiz
+-- hostnamectl
+  Static hostname: ip-172-31-10-255
+        Icon name: computer-vm
+          Chassis: vm 🖴
+Chassis Asset Tag: Amazon EC2
+   Virtualization: amazon
+ Operating System: Ubuntu 26.04.1 LTS
+           Kernel: Linux 7.0.0-1018-aws
+     Architecture: x86-64
+  Hardware Vendor: Amazon EC2
+   Hardware Model: t3.small
+ Firmware Version: 1.0
+    Firmware Date: Mon 2017-10-16
+     Firmware Age: 9y 1month 1w 2d
+-- uname -a
+Linux ip-172-31-10-255 7.0.0-1018-aws #19-Ubuntu SMP PREEMPT Tue Nov 10 20:30:58 UTC 2026 x86_64 GNU/Linux
+-- free -h
+               total        used        free      shared  buff/cache   available
+Mem:           1.9Gi       784Mi       677Mi        22Mi       632Mi       1.1Gi
+Swap:             0B          0B          0B
+-- df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        19G  2.7G   16G  15% /
+-- lsblk
+NAME     SIZE TYPE
+loop0   28.4M loop
+loop1     74M loop
+loop2   32.5M loop
+nvme0n1   20G disk
+-- ip -br address
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+ens5             UP             172.31.10.255/20 metric 100 fe80::ff:c3ff:fee1:f275/64 

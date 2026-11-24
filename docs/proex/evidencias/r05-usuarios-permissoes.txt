@@ -1,0 +1,30 @@
+=== R05 usuários e permissões
+-- id luiz / id ubuntu / id blitz
+uid=1001(luiz) gid=1001(luiz) groups=1001(luiz),4(adm),27(sudo),100(users)
+uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),4(adm),24(cdrom),27(sudo),30(dip),102(lxd)
+uid=999(blitz) gid=986(blitz) groups=986(blitz)
+-- contas com shell de login
+root /bin/bash
+ubuntu /bin/bash
+postgres /bin/bash
+luiz /bin/bash
+-- sshd (configuração efetiva)
+permitrootlogin prohibit-password
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication no
+-- permissões
+drwx------ 2 luiz luiz 4096 Nov 24 17:45 /home/luiz/.ssh
+-rw------- 1 luiz luiz 194 Nov 24 17:47 /home/luiz/.ssh/authorized_keys
+drwxr-x--- 2 root  blitz 4096 Nov 24 17:51 /etc/blitz
+drwxr-x--- 2 blitz blitz 4096 Nov 24 17:43 /opt/blitz
+drwxr-x--- 2 root  root  4096 Nov 24 17:45 /var/backups/blitz
+drwxr-xr-x 3 root  root  4096 Nov 24 17:42 /var/www/blitz
+-rw-r----- 1 root blitz 407 Nov 24 17:51 /etc/blitz/blitz.env
+-- sem sudo (usuário comum lendo segredo):
+cat: /etc/blitz/blitz.env: Permission denied
+-- processo da aplicação roda como:
+USER         PID CMD
+blitz       2292 /usr/bin/java -Xms128m -Xmx512m -jar /opt/blitz/blitz.jar
+-- correção aplicada em 24/11/2026: /etc/ssh/sshd_config.d/10-sem-root.conf com "PermitRootLogin no"
+   sshd -t ok, reload do ssh; sshd -T -> permitrootlogin no; login do usuário luiz continuou funcionando

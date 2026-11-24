@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório técnico · Blitz em produção na AWS</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+body { font-family: "Segoe UI", Arial, sans-serif; color: #16181D; font-size: 10.5pt; line-height: 1.45; margin: 0; }
+h1 { font-size: 20pt; margin: 0 0 4px; letter-spacing: -0.02em; }
+h2 { font-size: 13pt; color: #1D4ED8; margin: 18px 0 4px; break-after: avoid; }
+h3 { font-size: 11pt; margin: 12px 0 2px; break-after: avoid; }
+p { margin: 4px 0 6px; }
+.sub { color: #5B616E; margin: 0 0 14px; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9.5pt; }
+th, td { border: 1px solid #E2E4E9; padding: 4px 6px; vertical-align: top; text-align: left; }
+th { background: #EEF2FB; }
+tr { break-inside: avoid; }
+ul { margin: 2px 0 6px; padding-left: 18px; }
+pre { background: #F5F5F7; border: 1px solid #E2E4E9; border-radius: 6px; padding: 6px 8px; font-size: 8.3pt; line-height: 1.35; white-space: pre-wrap; word-break: break-word; margin: 4px 0 2px; break-inside: avoid; }
+code { font-family: Consolas, monospace; font-size: 9pt; }
+.leg { font-size: 9pt; color: #5B616E; margin: 0 0 10px; }
+.pend { border: 1.5px dashed #96590A; color: #96590A; border-radius: 6px; padding: 8px 10px; margin: 6px 0 4px; font-weight: 600; break-inside: avoid; }
+.teste { border: 1px solid #E2E4E9; border-radius: 8px; padding: 6px 10px; margin: 8px 0; break-inside: avoid; }
+.teste b { color: #1D4ED8; }
+.capa { border-bottom: 2px solid #1D4ED8; padding-bottom: 10px; margin-bottom: 10px; }
+img { max-width: 100%; border: 1px solid #E2E4E9; border-radius: 6px; }
+.quebra { break-before: page; }
+svg text { font-family: "Segoe UI", Arial, sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <h1>Blitz em produção na AWS</h1>
+  <p class="sub">Infraestrutura de Servidores · Projeto Final “PROEX em Produção” · Relatório técnico · 25/11/2026</p>
+  <table>
+    <tr><th>Projeto de PROEX</th><td>Blitz: sistema de foco e produtividade</td></tr>
+    <tr><th>Integrantes</th><td>Luiz Henrique Marinello da Rosa · Vinicius Fagundes · Raphael Gomes Henke</td></tr>
+    <tr><th>Código</th><td>github.com/luizmarinello/blitz (aplicação no commit <code>8cd3680</code>; scripts de infraestrutura em <code>infra/aws/</code>)</td></tr>
+    <tr><th>URL de demonstração</th><td><b>https://18-225-117-192.sslip.io</b> (HTTP redireciona para HTTPS)</td></tr>
+    <tr><th>Instância</th><td>EC2 t3.small · Ubuntu Server 26.04.1 LTS · us-east-2 (Ohio) · EBS 20 GB</td></tr>
+  </table>
+  <p>Convenção deste relatório: segredos aparecem como <code>VALOR_OCULTADO</code> e IPs de visitantes como <code>IP_OCULTADO</code>. Horários das saídas de terminal estão em UTC (Brasília = UTC−3). As evidências completas, em texto, estão em <code>docs/proex/evidencias/</code> no repositório.</p>
+</div>
+
+<h2>1. Identificação</h2>
+<p><b>Problema tratado.</b> Quem trabalha ou estuda alterna entre um gestor de tarefas, que organiza mas não acompanha a execução, e um aplicativo de foco, que cronometra mas não conhece as tarefas. O Blitz une as duas coisas: a pessoa cadastra listas e tarefas com prioridade, prazo e horas estimadas, inicia sessões de foco ligadas a uma tarefa e conversa com um assistente que sugere o que fazer agora. O Blitz substituiu o projeto anterior de PROEX do grupo (sistema de coleta de lixo).</p>
+<p><b>Funcionalidades implantadas e demonstráveis</b> (todas atendidas pela EC2):</p>
+<table>
+  <tr><th>Funcionalidade</th><th>O que o avaliador vê</th><th>Rota da API</th></tr>
+  <tr><td>1. Cadastro com aceite e login</td><td>Criar conta (o aceite dos Termos é obrigatório e fica registrado com data e versão), entrar e sair</td><td><code>/api/auth/*</code></td></tr>
+  <tr><td>2. Quadro de tarefas</td><td>Criar, editar, mover e concluir tarefas; os dados continuam lá depois de recarregar</td><td><code>/api/listas</code>, <code>/api/tarefas</code></td></tr>
+  <tr><td>3. Sessão de foco</td><td>Escolher um modo (Pomodoro, Profundo, Relax ou personalizado), iniciar e encerrar; as métricas atualizam</td><td><code>/api/sessoes</code>, <code>/api/metricas</code></td></tr>
+  <tr><td>4. Assistente</td><td>Perguntar “o que faço agora?” e receber a tarefa sugerida com o motivo</td><td><code>/api/ia/mensagem</code></td></tr>
+</table>
+<img src="img/01-login-https.png" style="width:62%;display:block;margin:0 auto" alt="Tela de login do Blitz aberta pelo endereço HTTPS público">
+<p class="leg">Figura 1. Tela de entrada do Blitz servida pela EC2 em https://18-225-117-192.sslip.io, acessada de fora da rede da instância.</p>
+<img src="img/02-painel-vazio.png" alt="Painel do Blitz logado com conta de apresentação, quadro vazio com os três passos de boas-vindas e o assistente ao lado">
+<p class="leg">Figura 2. Primeiro acesso de uma conta nova (“apresentação”): o quadro vazio explica os três passos e oferece tarefas de exemplo. À direita, o assistente em modo automático.</p>
+<img src="img/03-quadro-assistente.png" alt="Quadro com três tarefas em A fazer, a primeira marcada Comece por aqui, e o assistente respondendo a uma pergunta">
+<p class="leg">Figura 3. Depois de “Criar 3 tarefas de exemplo”, as tarefas foram gravadas no PostgreSQL da EC2 e aparecem no quadro (A fazer / Em andamento / Concluída), com prioridade, prazo e horas. A primeira recebeu a marca “Comece por aqui”, dada pela priorização do back-end. A resposta do assistente foi pedida antes da criação das tarefas, por isso diz que não há pendências.</p>
+
+<h2>2. Tecnologias</h2>
+<table>
+  <tr><th>Camada</th><th>Tecnologia</th><th>Onde roda</th></tr>
+  <tr><td>Front-end</td><td>TypeScript + Vite (sem framework), build estático</td><td>Arquivos em <code>/var/www/blitz</code>, servidos pelo Nginx</td></tr>
+  <tr><td>Back-end</td><td>Java 21 (OpenJDK 21.0.13) + Spring Boot 3.5, um único <code>.jar</code></td><td>Serviço systemd <code>blitz</code>, em <code>127.0.0.1:8080</code></td></tr>
+  <tr><td>Banco de dados</td><td>PostgreSQL 18.6, esquema criado por migrações Flyway (V1 a V3)</td><td>Na própria EC2, só em <code>127.0.0.1:5432</code></td></tr>
+  <tr><td>Servidor web</td><td>Nginx 1.28.3: arquivos estáticos + proxy reverso de <code>/api/</code></td><td>Portas 80 e 443</td></tr>
+  <tr><td>HTTPS</td><td>Certificado Let's Encrypt emitido pelo Certbot; nome DNS gratuito do sslip.io</td><td>Renovação pelo <code>certbot.timer</code></td></tr>
+  <tr><td>Serviço externo opcional</td><td>Google Gemini para o assistente. <b>Desligado durante os testes, para economizar</b>: sem a chave, responde o assistente local do próprio back-end, que prioriza as tarefas por regras (é o que aparece nas Figuras 2 e 3). Na apresentação, o Gemini será ligado e demonstrado funcionando</td><td>API do Google, chamada só pelo back-end; a chave fica em <code>/etc/blitz/blitz.env</code>, nunca no navegador</td></tr>
+</table>
+<p><b>Adaptações para a implantação</b> (o código da aplicação não foi reescrito): o back-end passou a ler o endereço de escuta, a porta, o banco e as regras do cookie de variáveis de ambiente (<code>SERVER_ADDRESS</code>, <code>PORT</code>, <code>DATABASE_*</code>, <code>COOKIE_*</code>). O front foi compilado no modo <code>aws</code> (<code>frontend/.env.aws</code>), que chama a API pelo caminho relativo <code>/api</code>. Assim, front e API ficam na mesma origem: não há CORS e o cookie de sessão pode ser <code>SameSite=Strict</code>. O envio de e-mail (recuperação de senha) não foi configurado porque não há servidor SMTP. Sem ele, o link de redefinição só vai para o log do serviço.</p>
+<p><b>Ligar o Gemini</b> (feito por um integrante, sem expor a chave): preencher <code>GEMINI_API_KEY=VALOR_OCULTADO</code> em <code>/etc/blitz/blitz.env</code> com <code>sudo nano</code> e rodar <code>sudo systemctl restart blitz</code>. Para desligar, apagar o valor e reiniciar. O provedor recebe só título, prioridade, status, prazo e horas das tarefas: nenhum nome, e-mail ou identificador da conta (LGPD). Nos logs, a pessoa aparece apenas por um pseudônimo, e o texto das mensagens não vai para o log. Se o Gemini falhar ou atingir o limite de uso, o assistente local responde no lugar.</p>
+
+<h2>3. Arquitetura</h2>
+<svg viewBox="0 0 720 250" width="100%" role="img" aria-label="Fluxo: navegador, Internet, Security Group, EC2 com Nginx, serviço blitz e PostgreSQL">
+  <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5B616E"/></marker></defs>
+  <rect x="8" y="88" width="100" height="56" rx="8" fill="#fff" stroke="#7D838F"/><text x="58" y="112" text-anchor="middle" font-size="12" font-weight="600">Navegador</text><text x="58" y="130" text-anchor="middle" font-size="10" fill="#5B616E">visitante</text>
+  <line x1="108" y1="116" x2="150" y2="116" stroke="#5B616E" marker-end="url(#s)"/><text x="129" y="106" text-anchor="middle" font-size="9" fill="#5B616E">Internet</text>
+  <rect x="152" y="20" width="560" height="220" rx="10" fill="#F5F5F7" stroke="#1D4ED8" stroke-dasharray="5 4"/><text x="164" y="38" font-size="11" fill="#1D4ED8" font-weight="600">Security Group (entrada: 22 só IPs administrativos · 80 e 443 públicas)</text>
+  <rect x="172" y="52" width="530" height="178" rx="8" fill="#fff" stroke="#7D838F"/><text x="184" y="70" font-size="11" font-weight="600">EC2 t3.small · Ubuntu 26.04 LTS · us-east-2</text>
+  <rect x="190" y="88" width="140" height="64" rx="8" fill="#EEF2FB" stroke="#1D4ED8"/><text x="260" y="112" text-anchor="middle" font-size="12" font-weight="600">Nginx</text><text x="260" y="128" text-anchor="middle" font-size="9.5">:80 → 301 para :443</text><text x="260" y="142" text-anchor="middle" font-size="9.5">TLS Let's Encrypt</text>
+  <text x="260" y="174" text-anchor="middle" font-size="9.5" fill="#5B616E">/ e /assets → /var/www/blitz</text>
+  <line x1="330" y1="120" x2="390" y2="120" stroke="#5B616E" marker-end="url(#s)"/><text x="360" y="112" text-anchor="middle" font-size="9" fill="#5B616E">/api/</text>
+  <rect x="392" y="88" width="140" height="64" rx="8" fill="#EEF2FB" stroke="#1D4ED8"/><text x="462" y="110" text-anchor="middle" font-size="12" font-weight="600">blitz.service</text><text x="462" y="126" text-anchor="middle" font-size="9.5">Java 21 / Spring</text><text x="462" y="140" text-anchor="middle" font-size="9.5">127.0.0.1:8080</text>
+  <line x1="532" y1="120" x2="568" y2="120" stroke="#5B616E" marker-end="url(#s)"/>
+  <rect x="570" y="88" width="120" height="64" rx="8" fill="#EEF2FB" stroke="#1D4ED8"/><text x="630" y="110" text-anchor="middle" font-size="12" font-weight="600">PostgreSQL 18</text><text x="630" y="126" text-anchor="middle" font-size="9.5">127.0.0.1:5432</text><text x="630" y="140" text-anchor="middle" font-size="9.5">banco “blitz”</text>
+  <text x="190" y="206" font-size="9.5" fill="#5B616E">SSH (22): usuário e chave individuais · backup: pg_dump + configs → scp para o PC</text>
+</svg>
+<p class="leg">Figura 4. Caminho de uma requisição. Só o Nginx é alcançável da Internet; o back-end e o banco escutam apenas na interface local (127.0.0.1), por isso não precisam de regra no Security Group.</p>
+<p><b>Caminho de uma requisição:</b> (1) o navegador resolve <code>18-225-117-192.sslip.io</code> para o IP público. (2) O Security Group libera a porta 443. (3) O Nginx encerra o TLS. (4) Se o caminho for <code>/</code> ou <code>/assets/</code>, o Nginx entrega o arquivo de <code>/var/www/blitz</code>. Se for <code>/api/</code>, repassa a <code>127.0.0.1:8080</code> com os cabeçalhos <code>X-Forwarded-*</code>. (5) O Spring valida o cookie de sessão e consulta o PostgreSQL local. <b>Dependências fora da EC2:</b> DNS do sslip.io e a autoridade Let's Encrypt (só na emissão e na renovação). A aplicação em si não depende de nenhum serviço externo.</p>
+
+<h2>4. Provisionamento</h2>
+<table>
+  <tr><th>Item</th><th>Escolha</th><th>Justificativa</th></tr>
+  <tr><td>Região</td><td>us-east-2 (Ohio), zona us-east-2a</td><td>Região com o catálogo completo do Free Plan; o banco de produção do TCC já fica em Ohio</td></tr>
+  <tr><td>AMI / SO</td><td>Ubuntu Server 26.04.1 LTS (ami-0f441bd6af0596ef7), kernel 7.0.0-1018-aws, x86_64</td><td>LTS suportada pela Canonical; tem Java 21, PostgreSQL 18 e Nginx nos repositórios oficiais</td></tr>
+  <tr><td>Tipo</td><td>t3.small (2 vCPU, 2 GB de RAM)</td><td>A JVM do Spring Boot com o PostgreSQL não cabe com folga em 1 GB. Medido em operação: 784 MiB usados e 1,1 GiB disponíveis</td></tr>
+  <tr><td>Armazenamento</td><td>1 volume EBS de 20 GB (nvme0n1); 2,7 GB usados (15%)</td><td>Sistema, aplicação, banco e backups locais, com folga</td></tr>
+  <tr><td>Rede</td><td>VPC padrão, sub-rede pública, IPv4 público automático 18.225.117.192, IP privado 172.31.10.255</td><td>Sem IP elástico, para não gerar custo extra. Consequência: <i>stop/start</i> troca o IP (ver seção 10)</td></tr>
+</table>
+<p><b>Conta e créditos (R02).</b> Tentamos três cadastros com e-mail institucional da FAG, e nenhum ficou utilizável a tempo. Na primeira conta, a modalidade paga foi escolhida por engano no cadastro e ela ficou sem créditos; a conta foi encerrada. Na segunda, a AWS respondeu “You are not eligible for the free plan”. A terceira foi suspensa logo após o cadastro. Por isso, o ambiente foi criado numa conta Free Plan já existente de um integrante. No painel, essa conta mostrava saldo de US$ 95,12 com validade até 11/05/2027.</p>
+<img src="img/04-free-plan.png" alt="Painel de faturamento da AWS: plano Gratuito, 170 dias restantes até 11/05/2027, créditos restantes US$ 95,12, valor devido US$ 0,00, acumulado no mês US$ 4,70">
+<p class="leg">Figura 5. Faturamento em 24/11/2026: plano Gratuito, 170 dias restantes (até 11/05/2027), US$ 95,12 de créditos e US$ 0,00 devido. O consumo do mês, US$ 4,70, é coberto pelos créditos. O nome da conta foi recortado da captura.</p>
+<p><b>Recursos que consomem crédito:</b> horas da instância t3.small, o volume EBS de 20 GB, o IPv4 público e a transferência de dados de saída. A instância da Parte 1 da disciplina (<code>blitz-proex</code>, t3.micro) foi encerrada em 24/11/2026 para não consumir mais créditos. Assim, o único servidor ativo é o deste trabalho.</p>
+<img src="img/06-instancias.png" alt="Lista de instâncias EC2: BLITZ-proex final, t3.small, Executando, 3/3 verificações aprovadas, us-east-2a, IP 18.225.117.192; blitz-proex t3.micro Encerrado">
+<p class="leg">Figura 7. Console EC2: a instância <code>BLITZ-proex final</code> (i-0e0e281562efc8520, t3.small, us-east-2a) em execução, com as 3 verificações de status aprovadas e IPv4 público 18.225.117.192. A instância da Parte 1 aparece como encerrada.</p>
+
+<h2>5. Administração</h2>
+<p><b>Política de acesso.</b> Cada integrante gera o próprio par de chaves no seu computador e entrega só a <b>chave pública</b>. O script <code>infra/aws/criar-usuario.sh</code> cria o usuário Linux, grava a chave em <code>~/.ssh/authorized_keys</code> (pasta 700, arquivo 600) e, quando pedido, adiciona o usuário ao grupo <code>sudo</code>. A chave do par criado na AWS (usuário <code>ubuntu</code>) fica só no computador do responsável e serve de acesso de emergência. Nenhuma chave privada foi compartilhada, enviada ou versionada.</p>
+<pre>$ ssh -i ~/.ssh/blitz-luiz luiz@18.225.117.192 'whoami; id; sudo -n true &amp;&amp; echo "sudo ok"'
+luiz
+uid=1001(luiz) gid=1001(luiz) groups=1001(luiz),4(adm),27(sudo),100(users)
+sudo ok
+$ sudo sshd -T | grep -Ei "^(permitrootlogin|passwordauthentication|pubkeyauthentication) "
+permitrootlogin no            &lt;- definido em /etc/ssh/sshd_config.d/10-sem-root.conf
+pubkeyauthentication yes
+passwordauthentication no</pre>
+<p class="leg">Login SSH com usuário pessoal, uso de sudo e configuração efetiva do SSH: root não entra remotamente e senha não é aceita, só chave.</p>
+<table>
+  <tr><th>Conta Linux</th><th>Quem usa</th><th>Privilégio</th></tr>
+  <tr><td><code>luiz</code></td><td>Luiz (administrador)</td><td>Grupos sudo e adm</td></tr>
+  <tr><td><span class="pend" style="display:inline;border:0;padding:0">vinicius · raphael</span></td><td>Vinicius e Raphael</td><td><span class="pend" style="display:inline;border:0;padding:0">a criar em 25/11 com as chaves públicas deles</span></td></tr>
+  <tr><td><code>ubuntu</code></td><td>Acesso de emergência (chave da AWS)</td><td>Sudo</td></tr>
+  <tr><td><code>blitz</code></td><td>Processo da aplicação</td><td>Conta de sistema, sem shell (<code>nologin</code>) e sem sudo</td></tr>
+  <tr><td><code>postgres</code></td><td>Banco de dados</td><td>Só acessível localmente</td></tr>
+</table>
+<pre>drwxr-x--- root  blitz /etc/blitz          -rw-r----- root blitz /etc/blitz/blitz.env
+drwxr-x--- blitz blitz /opt/blitz          drwxr-xr-x root root  /var/www/blitz
+drwxr-x--- root  root  /var/backups/blitz
+$ sudo -u ubuntu cat /etc/blitz/blitz.env
+cat: /etc/blitz/blitz.env: Permission denied
+$ ps -o user,pid,cmd -C java
+blitz  2292 /usr/bin/java -Xms128m -Xmx512m -jar /opt/blitz/blitz.jar</pre>
+<p class="leg">Permissões: o arquivo de segredos só pode ser lido pelo root e pelo grupo do serviço. Até um usuário com sudo precisa de <code>sudo</code> para lê-lo. A aplicação não roda como root.</p>
+
+<h2>6. Publicação</h2>
+<p>O build é feito no computador do integrante, porque Maven e npm usam memória demais para uma máquina de 2 GB. Depois, o pacote é enviado por <code>scp</code> e instalado por um script idempotente: pode rodar de novo a cada versão sem apagar dados.</p>
+<pre># No computador do integrante (Git Bash):
+EC2=18.225.117.192 CHAVE=~/.ssh/blitz-proex-final.pem USUARIO=ubuntu infra/aws/implantar.sh
+  1. ./mvnw package               -> blitz.jar
+  2. npx vite build --mode aws    -> front.tar.gz (API em caminho relativo)
+  3. scp para /tmp/blitz-deploy e ssh "sudo instalar.sh"
+# instalar.sh, na EC2:
+  apt install openjdk-21-jre-headless postgresql nginx · cria o usuário de sistema blitz
+  cria o banco e o usuário "blitz" com senha aleatória e grava /etc/blitz/blitz.env (640), só se ainda não existir
+  instala /opt/blitz/blitz.jar e /var/www/blitz · instala e habilita blitz.service
+  instala o site do Nginx, remove o site padrão, nginx -t, reload · testa /api/auth/saude</pre>
+<p><b>Unidade systemd</b> (<code>/etc/systemd/system/blitz.service</code>):</p>
+<pre>[Unit]
+Description=Blitz - API (Java 21 / Spring Boot)
+After=network.target postgresql.service
+Wants=postgresql.service
+[Service]
+User=blitz
+Group=blitz
+WorkingDirectory=/opt/blitz
+EnvironmentFile=/etc/blitz/blitz.env
+ExecStart=/usr/bin/java -Xms128m -Xmx512m -jar /opt/blitz/blitz.jar
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target</pre>
+<p><b>Configuração do Nginx</b> (<code>/etc/nginx/sites-available/blitz</code>, ativada por link em <code>sites-enabled</code>; o bloco 443 foi acrescentado pelo Certbot):</p>
+<pre>server {
+    listen 443 ssl;  listen [::]:443 ssl;            # managed by Certbot
+    server_name 18-225-117-192.sslip.io;
+    ssl_certificate /etc/letsencrypt/live/18-225-117-192.sslip.io/fullchain.pem;  # chave privada: não reproduzida
+    root /var/www/blitz;  index index.html;
+    add_header X-Content-Type-Options nosniff always;  add_header X-Frame-Options DENY always;
+    client_max_body_size 1m;  server_tokens off;
+    location /api/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;  proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /assets/ { try_files $uri =404; expires 30d; }
+    location / { try_files $uri $uri/ /index.html; }   # rotas do front (#/...) caem no index.html
+}
+server {                                             # porta 80: só redireciona
+    listen 80;  listen [::]:80;  server_name _;
+    return 301 https://18-225-117-192.sslip.io$request_uri;   # vale também para quem digita só o IP
+}
+$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful</pre>
+<p class="leg">Trecho resumido. O arquivo completo e o modelo das variáveis (<code>blitz.env.exemplo</code>, com segredos como <code>VALOR_OCULTADO</code>) estão em <code>infra/aws/</code>.</p>
+
+<h2>7. Segurança</h2>
+<table>
+  <tr><th>Porta</th><th>Origem no Security Group</th><th>Quem escuta</th><th>Motivo</th></tr>
+  <tr><td>22/TCP</td><td>IPs administrativos (/32)</td><td>sshd</td><td>Administração; só chave, sem root e sem senha</td></tr>
+  <tr><td>80/TCP</td><td>0.0.0.0/0</td><td>Nginx</td><td>Só redireciona para HTTPS e responde à validação do Let's Encrypt</td></tr>
+  <tr><td>443/TCP</td><td>0.0.0.0/0</td><td>Nginx</td><td>Acesso dos visitantes com TLS</td></tr>
+  <tr><td>8080/TCP</td><td><b>sem regra</b></td><td>Java, só em 127.0.0.1</td><td>Só o Nginx, na mesma máquina, fala com o back-end</td></tr>
+  <tr><td>5432/TCP</td><td><b>sem regra</b></td><td>PostgreSQL, só em 127.0.0.1</td><td>Banco nunca exposto</td></tr>
+</table>
+<img src="img/05-security-group.png" alt="Regras de entrada do Security Group launch-wizard-2: SSH porta 22 de um único IP /32, HTTPS 443 e HTTP 80 de 0.0.0.0/0">
+<p class="leg">Figura 6. Regras de entrada do Security Group <code>launch-wizard-2</code>, ligado à instância: SSH (22) aceito só de um IP administrativo /32, e HTTP (80) e HTTPS (443) abertos para visitantes. Não há regra para 8080 nem 5432. O IP do administrador foi substituído por <code>IP_ADMIN</code>. Para a apresentação, será acrescentada uma regra 22 com o IP da rede da FAG.</p>
+<pre>$ sudo ss -tlnp
+0.0.0.0:22   sshd       0.0.0.0:80   nginx      0.0.0.0:443  nginx      (e o mesmo em [::] para IPv6)
+127.0.0.1:5432  postgres          [::ffff:127.0.0.1]:8080  java   (127.0.0.53/54:53 = DNS local do systemd)</pre>
+<p class="leg">Portas em escuta: as únicas abertas para fora são 22, 80 e 443. O firewall do Ubuntu (UFW) ficou desativado de propósito; o controle é feito pelo Security Group.</p>
+<ul>
+  <li><b>Atualizações:</b> <code>apt-get upgrade</code> aplicado em 24/11/2026 (tzdata e python3-oauthlib). Um pacote (libsqlite3-0) está retido pela liberação em fases do Ubuntu. O <code>unattended-upgrades</code> está habilitado e aplica as correções de segurança todo dia.</li>
+  <li><b>Segredos:</b> a senha do banco, o segredo da aplicação e o sal de pseudonimização são gerados aleatoriamente na instalação. Eles ficam só em <code>/etc/blitz/blitz.env</code> (640) e nunca entram no Git; o repositório tem apenas o modelo. Nenhum arquivo <code>.pem</code>, <code>.env</code> real ou dump de banco foi publicado.</li>
+  <li><b>Aplicação:</b> senhas guardadas com hash; o cookie de sessão é <code>HttpOnly</code>, <code>Secure</code> e <code>SameSite=Strict</code>. A API envia <code>Strict-Transport-Security</code> e o Nginx envia <code>X-Frame-Options</code> e <code>nosniff</code>.</li>
+  <li><b>HTTPS:</b> certificado válido emitido para <code>18-225-117-192.sslip.io</code>, sem compra de domínio. O sslip.io resolve o nome para o IP embutido nele. O cadastro no Let's Encrypt foi feito sem e-mail (<code>--register-unsafely-without-email</code>), para não registrar dado pessoal.</li>
+</ul>
+<pre>$ echo | openssl s_client -connect 18-225-117-192.sslip.io:443 2>/dev/null | openssl x509 -noout -issuer -subject -dates
+issuer=C=US, O=Let's Encrypt, CN=YE1
+subject=CN=18-225-117-192.sslip.io
+notBefore=Nov 24 16:53:08 2026 GMT   notAfter=Feb 22 16:53:07 2027 GMT
+$ curl -s -o /dev/null -w "%{http_code} %{redirect_url}" http://18-225-117-192.sslip.io/
+301 https://18-225-117-192.sslip.io/
+$ sudo certbot renew --dry-run
+Congratulations, all simulated renewals succeeded
+$ systemctl list-timers certbot.timer       -> próxima execução: 25/11/2026 06:30 UTC</pre>
+<p class="leg">HTTPS: certificado válido por 90 dias, HTTP redirecionado e teste de renovação aprovado. Diferença prática: em HTTP, senha e cookie trafegam legíveis por quem estiver no caminho; em HTTPS, vão cifrados, e o certificado prova que o servidor é mesmo o dono do nome.</p>
+
+<h2>8. Operação</h2>
+<div class="teste"><b>Teste: inicialização automática após reinício do SO (R08).</b><br>
+<b>Objetivo:</b> confirmar que Nginx, back-end e banco voltam sem intervenção.<br>
+<b>Procedimento:</b> <code>sudo systemctl reboot</code> às 17:47:38 UTC de 24/11/2026; acompanhar <code>/api/auth/saude</code> de fora e conferir os serviços ao reconectar.<br>
+<b>Resultado:</b> novo boot às 17:47:49; <code>blitz.service</code> iniciado às 17:47:58; API respondendo 200 de fora cerca de 30 s após o pedido. <code>is-active</code> = active ×3 e <code>is-enabled</code> = enabled ×3 (nginx, blitz, postgresql).<br>
+<b>Interpretação:</b> as três unidades estão habilitadas no systemd (<code>WantedBy=multi-user.target</code>). O <code>After=postgresql.service</code> garante que o back-end só sobe depois do banco.</div>
+<pre>$ uptime                                  17:49:30 up 1 min, load average: 1.33, 0.46, 0.16
+$ free -h        Mem: total 1.9Gi  used 748Mi  free 945Mi  available 1.1Gi   Swap: 0B
+$ df -h /        /dev/root 19G  2.7G usados  16G livres  15%
+$ ps aux --sort=-%mem | head -2
+blitz 2292  0.9 18.8 ... 367852 KB  /usr/bin/java -Xms128m -Xmx512m -jar /opt/blitz/blitz.jar
+$ top -bn1       %Cpu(s): 0.0 us, 4.8 sy, 95.2 id      (19:13 UTC, sem carga)
+$ systemctl status blitz      Active: active (running)  Memory: 305.1M (peak: 310M)
+$ journalctl -u blitz -n 5
+... Tomcat started on port 8080 (http) ... Started BlitzApplication in 13.331 s</pre>
+<p class="leg">Métricas em momento conhecido. Interpretação: a JVM é o maior consumidor (cerca de 19% da RAM), dentro do teto de 512 MB do <code>-Xmx</code>; há 1,1 GiB livres, a CPU está ociosa e o disco tem 85% livre. Não há swap, então um pico de memória faria o kernel matar o processo, e o <code>Restart=on-failure</code> o reergueria.</p>
+<div class="teste"><b>Teste: requisição normal × rota inexistente (R10).</b><br>
+<b>Procedimento:</b> de fora, pedir <code>/assets/arquivo-inexistente.js</code> e <code>/api/rota-que-nao-existe</code>; localizar as linhas no <code>access.log</code>.<br>
+<pre>IP_OCULTADO [24/Nov/2026:19:13:27] "GET /api/rota-que-nao-existe HTTP/1.1" 401 64 "curl/8.21.0"
+IP_OCULTADO [24/Nov/2026:19:14:07] "GET /assets/arquivo-inexistente.js HTTP/1.1" 404 146 "curl/8.21.0"
+IP_OCULTADO [24/Nov/2026:19:05:32] "GET / HTTP/1.0" 301 178 "Hello from Palo Alto Networks ... Scanning-activity"</pre>
+<b>Interpretação:</b> o 404 vem do próprio Nginx, que não achou o arquivo em <code>/var/www/blitz/assets</code>. O 401 vem do Spring: a requisição chegou ao back-end, que exige login antes de revelar se a rota existe. Como não houve 502, o back-end estava ativo. A terceira linha é um robô de varredura da Internet, que chega minutos depois de a máquina ganhar um IP público; por isso só 80 e 443 ficam abertas a todos.</div>
+
+<h2>9. Testes</h2>
+<div class="teste"><b>Teste: acesso externo e fluxo completo (R01, R06).</b> <b>Procedimento:</b> <code>BASE=https://18-225-117-192.sslip.io scripts/smoke.sh</code>, executado de um computador fora da AWS. Ele cadastra, faz login, cria e conclui tarefa, cria modo, inicia e encerra sessão, consulta métricas, conversa com o assistente, exporta os dados e exclui a conta (21 verificações). <b>Resultado:</b> “TODOS OS PASSOS PASSARAM”. <b>Interpretação:</b> todas as camadas (TLS, Nginx, Spring e PostgreSQL) funcionam em conjunto e sem depender do computador do integrante.</div>
+
+<div class="teste"><b>Teste: 5 acessos simultâneos (R13).</b> <b>Procedimento:</b> <code>URL=http://18.225.117.192 infra/aws/teste-concorrencia.sh</code>, que dispara 5 <code>curl</code> em paralelo (3 na página e 2 na API).
+<pre>Início: 14:48:33 (Brasília)
+GET / -> HTTP 200 em 0.299s      GET / -> HTTP 200 em 0.295s      GET / -> HTTP 200 em 0.350s
+GET /api/auth/saude -> HTTP 200 em 0.348s      GET /api/auth/saude -> HTTP 200 em 0.336s
+Fim: 14:48:34
+access.log: 5 linhas no mesmo segundo (17:48:34–35 UTC), todas 200</pre>
+<b>Interpretação:</b> quem recebe as conexões é o Nginx, cujos processos de trabalho atendem muitas conexões ao mesmo tempo sem criar um processo por cliente. Os arquivos estáticos nem chegam ao Java, e as chamadas à API usam o pool de threads do Tomcat. O tempo de cerca de 0,3 s é dominado pela distância até Ohio, não pelo servidor. Gargalos prováveis com carga real: a memória (2 GB, sem swap) e o pool de conexões do banco, não o Nginx.</div>
+
+<div class="teste"><b>Teste: incidente controlado com back-end parado (R11).</b>
+<pre>1. estado saudável       GET /api/auth/saude -> 200
+2. falha introduzida     sudo systemctl stop blitz          -> inactive
+3. efeito percebido      /api/auth/saude -> HTTP 502   |  página inicial (estática) -> HTTP 200
+4. evidência no log      error.log: connect() failed (111: Connection refused) while connecting to upstream,
+                         upstream: "http://127.0.0.1:8080/api/auth/saude"
+5. recuperação           sudo systemctl start blitz
+6. verificação externa   /api/auth/saude -> HTTP 200 em ~15 s (tempo de subida do Spring)
+extra: kill -9 no Java   systemd: "Main process exited, code=killed, status=9/KILL"
+                         "Scheduled restart job, restart counter is at 1" -> active de novo em 5 s</pre>
+<b>Interpretação:</b> o Nginx continuou ativo, por isso o site abre mas a API responde 502 Bad Gateway: o proxy não encontrou ninguém em 127.0.0.1:8080. O <code>error.log</code> aponta exatamente o upstream recusado. Uma parada manual (<code>stop</code>) não é reiniciada, porque é intencional. Já uma morte inesperada (<code>kill -9</code>) é tratada pelo <code>Restart=on-failure</code>.</div>
+
+<div class="teste"><b>Teste: backup fora da EC2 e restauração (R12).</b>
+<pre>1º teste (24/11, 17:45 UTC): pacote de 15 KB copiado para o PC; restaurado: 1 usuário, 0 tarefas, 3 migrações = original
+2º teste (24/11, 19:50 UTC), já com dados fictícios de demonstração, no mesmo fluxo da apresentação:
+EC2   sudo /opt/blitz-admin/backup.sh  -> /var/backups/blitz/blitz-20261124-1950.tar.gz (root:adm 640)
+      conteúdo: blitz-banco.dump (pg_dump -Fc) · nginx-blitz.conf · blitz.service · LEIA-ME.txt
+      blitz.env vai à parte em blitz-env-*.SEGREDO (600, só root), fora do pacote baixável
+PC    EC2=... CHAVE=... USUARIO=luiz infra/aws/baixar-backup.sh  -> backups-blitz/blitz-20261124-1950.tar.gz (16 KB)
+EC2   cópia do PC enviada de volta -> sudo /opt/blitz-admin/restaurar-teste.sh (banco SEPARADO)
+                           usuarios | tarefas | sessoes | migracoes
+      blitz (produção)            4 |       7 |       2 |         3
+      blitz_restauracao_teste     4 |       7 |       2 |         3   -> idênticos
+      tarefas restauradas: "Testar backup e restauração" MEDIA, "Ler documentação do Nginx" BAIXA, ...</pre>
+<b>Interpretação:</b> o <code>pg_dump</code> gera uma cópia consistente com a aplicação no ar, sem copiar os arquivos do banco em uso. A restauração foi feita num banco separado, sem tocar a produção, a partir da cópia que estava <i>fora</i> da EC2. Isso prova que o backup externo basta para reconstruir os dados. O Git guarda o código, mas não guarda os dados dos usuários; por isso existe o backup.</div>
+
+<h2>10. Continuidade</h2>
+<p><b>Inventário de arquivos protegidos:</b> banco <code>blitz</code> (dump), <code>/etc/nginx/sites-available/blitz</code>, <code>/etc/systemd/system/blitz.service</code>, roteiro de instalação (<code>infra/aws/</code> no Git) e <code>/etc/blitz/blitz.env</code> (cópia separada, só para o administrador). <b>Destino:</b> computador do integrante responsável, fora da AWS.</p>
+<table>
+  <tr><th>Falha</th><th>Ação</th></tr>
+  <tr><td>API fora (502)</td><td><code>systemctl status blitz</code> → <code>journalctl -u blitz -n 50</code> → corrigir → <code>systemctl start blitz</code></td></tr>
+  <tr><td>Site fora por completo</td><td>Instância em running? Security Group? <code>systemctl status nginx</code>, <code>nginx -t</code>, <code>error.log</code></td></tr>
+  <tr><td>Instância perdida</td><td>Nova EC2 → <code>implantar.sh</code> → <code>pg_restore</code> do último dump → <code>ativar-https.sh</code> com o novo nome</td></tr>
+  <tr><td>IP mudou após stop/start</td><td>O nome sslip.io acompanha o IP: rodar <code>ativar-https.sh NOVO-IP.sslip.io</code> e ajustar o SSH</td></tr>
+  <tr><td>Crédito acabando</td><td>Acompanhar o painel do Free Plan; parar a instância quando não estiver em uso</td></tr>
+</table>
+<table>
+  <tr><th>Recurso ativo</th><th>Depois da avaliação</th></tr>
+  <tr><td>EC2 blitz (t3.small) + EBS 20 GB</td><td>Backup final → parar → encerrar (<i>terminate</i>) quando a nota sair</td></tr>
+  <tr><td>EC2 da Parte 1 (t3.micro)</td><td>Encerrada em 24/11/2026; conferir em EBS → Volumes se o volume dela também foi apagado</td></tr>
+  <tr><td>Par de chaves, Security Group</td><td>Excluir após encerrar as instâncias</td></tr>
+  <tr><td>Dados do PROEX</td><td>Preservados no último dump no computador do integrante; o Blitz continua em produção no Render + Neon para o TCC</td></tr>
+</table>
+<p><b>Limites da solução:</b> é uma única EC2 numa única zona. Se a máquina ou a zona cair, o sistema fica fora até alguém agir. Também não há balanceador nem réplica do banco, e o backup é manual, não agendado. Para alta disponibilidade, seriam necessárias duas instâncias atrás de um balanceador, banco gerenciado com réplica e backup agendado, o que está fora do escopo e dos créditos deste trabalho.</p>
+
+<h2>Divisão do trabalho</h2>
+<table>
+  <tr><th>Integrante</th><th>Contribuição</th></tr>
+  <tr><td>Luiz Henrique Marinello da Rosa</td><td>Infraestrutura do sistema: conta AWS, EC2, Security Group, usuários SSH, Nginx, systemd, HTTPS, backup e testes de operação. Também fez a autenticação (cadastro com aceite, login, sessão por cookie) e a integração com a API de IA (Gemini e o assistente local que responde quando ela está desligada).</td></tr>
+  <tr><td>Raphael Gomes Henke</td><td>Front-end: telas do Blitz em TypeScript + Vite (quadro de tarefas, sessão de foco, modos, métricas e assistente), servidas pelo Nginx a partir de <code>/var/www/blitz</code>.</td></tr>
+  <tr><td>Vinicius Fagundes</td><td>Back-end das funcionalidades com o banco de dados: listas, tarefas, sessões de foco, modos e métricas no Spring Boot, gravando no PostgreSQL que roda na EC2.</td></tr>
+</table>
+<p><b>Na apresentação:</b> Luiz conduz a parte técnica de operação (SSH e usuários, Security Group, Nginx, systemd e reboot, monitoramento, incidente e backup). Raphael demonstra o Blitz funcionando no navegador, e Vinicius explica o fluxo das funcionalidades até o banco de dados. Os três respondem às perguntas sobre todo o ambiente.</p>
+
+</body>
+</html>

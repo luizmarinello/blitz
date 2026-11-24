@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Roteiro de apresentação · Blitz na AWS</title>
+<style>
+@page { size: A4; margin: 14mm 14mm; }
+body { font-family: "Segoe UI", Arial, sans-serif; color: #16181D; font-size: 10pt; line-height: 1.4; margin: 0; }
+h1 { font-size: 17pt; margin: 0 0 2px; letter-spacing: -0.02em; }
+h2 { font-size: 12pt; color: #1D4ED8; margin: 14px 0 4px; break-after: avoid; }
+.sub { color: #5B616E; margin: 0 0 10px; }
+.parte { border: 1px solid #E2E4E9; border-radius: 8px; padding: 6px 10px 8px; margin: 8px 0; break-inside: avoid; }
+.cab { display: flex; justify-content: space-between; font-weight: 700; border-bottom: 1px solid #E2E4E9; padding-bottom: 3px; margin-bottom: 4px; }
+.cab span:last-child { color: #1D4ED8; }
+pre { background: #F5F5F7; border: 1px solid #E2E4E9; border-radius: 6px; padding: 5px 8px; font-size: 8.6pt; line-height: 1.35; white-space: pre-wrap; margin: 4px 0; }
+.fala { margin: 3px 0; }
+.fala b { color: #1D4ED8; }
+.esp { color: #1E7B34; font-size: 9pt; }
+.alerta { border: 1.5px solid #C0261F; color: #C0261F; border-radius: 6px; padding: 6px 10px; margin: 6px 0; font-weight: 600; break-inside: avoid; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 4px 0; }
+th, td { border: 1px solid #E2E4E9; padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background: #EEF2FB; }
+tr { break-inside: avoid; }
+ul { margin: 2px 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+
+<h1>Roteiro de apresentação: Blitz na AWS</h1>
+<p class="sub">Infraestrutura de Servidores · Projeto Final · 25/11/2026 · 20 a 25 min + perguntas · URL: <b>https://18-225-117-192.sslip.io</b></p>
+
+<table>
+  <tr><th>#</th><th>Parte</th><th>Quem</th><th>Tempo</th></tr>
+  <tr><td>0</td><td>Abertura</td><td>Luiz</td><td>1 min</td></tr>
+  <tr><td>1</td><td>Blitz funcionando (de outra rede)</td><td>Raphael</td><td>4 min</td></tr>
+  <tr><td>2</td><td>Arquitetura e caminho até o banco</td><td>Vinicius (+ Luiz no terminal)</td><td>3 min</td></tr>
+  <tr><td>3</td><td>Acesso e ambiente Linux</td><td>Luiz</td><td>3 min</td></tr>
+  <tr><td>4</td><td>Rede e Nginx</td><td>Luiz</td><td>3 min</td></tr>
+  <tr><td>5</td><td>Serviços e reinicialização</td><td>Luiz</td><td>2 min</td></tr>
+  <tr><td>6</td><td>Monitoramento e logs</td><td>Luiz (+ Raphael no celular)</td><td>2 min</td></tr>
+  <tr><td>7</td><td>Incidente controlado</td><td>Luiz (+ Raphael no celular)</td><td>3 min</td></tr>
+  <tr><td>8</td><td>Backup e restauração</td><td>Luiz</td><td>2 min</td></tr>
+  <tr><td>9</td><td>Créditos e encerramento</td><td>Luiz</td><td>1 min</td></tr>
+  <tr><td>—</td><td>Perguntas individuais</td><td>Os três</td><td>resto</td></tr>
+</table>
+
+<h2>Antes de começar (30 min antes)</h2>
+<ul>
+  <li>Security Group: regra <b>SSH 22</b> com o IP da FAG (Editar regras de entrada → Adicionar regra → SSH → <i>Meu IP</i>), feita de dentro da faculdade.</li>
+  <li>No notebook: <code>ssh -i ~/.ssh/SUA_CHAVE luiz@18.225.117.192</code> entra? Deixar <b>duas abas</b> de terminal abertas e logadas, com fonte grande.</li>
+  <li>Teste do site: <code>curl -s https://18-225-117-192.sslip.io/api/auth/saude</code> deve responder <code>{"status":"ok"}</code>.</li>
+  <li>Gemini ligado: <code>sudo nano /etc/blitz/blitz.env</code> → preencher <code>GEMINI_API_KEY=</code> → <code>sudo systemctl restart blitz</code> → fazer uma pergunta de teste no app. <b>Fazer isto antes, não na frente da turma.</b></li>
+  <li>Celular do Raphael no <b>4G</b>, não no Wi-Fi da FAG. Assim o professor vê o acesso vindo de outra rede.</li>
+  <li>Abrir no navegador: console da AWS (Instâncias e Security Groups), o site e o relatório em PDF. Fechar abas com e-mail ou dados pessoais.</li>
+  <li>Plano B se o SSH falhar: console → instância → <b>Conectar → EC2 Instance Connect</b> (entra como <code>ubuntu</code>).</li>
+</ul>
+<div class="alerta">Nunca na tela: <code>cat /etc/blitz/blitz.env</code>, arquivos .pem, número da conta AWS. Não clicar em "Interromper" nem "Encerrar" a instância (o IP muda e o HTTPS para).</div>
+
+<div class="parte"><div class="cab"><span>0. Abertura</span><span>Luiz · 1 min</span></div>
+<p class="fala"><b>Fala:</b> “O Blitz é o nosso projeto de PROEX: une gestão de tarefas e sessões de foco, com um assistente que sugere o que fazer agora. Colocamos o sistema completo numa EC2 Ubuntu na AWS: front, back-end Java e banco PostgreSQL, com Nginx na frente, HTTPS, serviço systemd e backup. Eu cuidei da infraestrutura, da autenticação e da IA; o Raphael fez o front-end; o Vinicius fez o back-end com o banco.”</p></div>
+
+<div class="parte"><div class="cab"><span>1. Blitz funcionando</span><span>Raphael · 4 min</span></div>
+<p class="fala"><b>Ação (celular no 4G, espelhado ou mostrado ao professor):</b></p>
+<ol style="margin:2px 0;padding-left:18px">
+  <li>Abrir <b>18-225-117-192.sslip.io</b> e mostrar o cadeado do HTTPS.</li>
+  <li><b>Criar conta</b> com dados fictícios (ex.: <code>aluno.demo@exemplo.test</code>) e mostrar que o aceite dos Termos é obrigatório.</li>
+  <li><b>Criar 3 tarefas de exemplo</b>, mover uma para “Em andamento” e mostrar a marca “Comece por aqui”.</li>
+  <li><b>Iniciar</b> uma sessão de foco (Pomodoro) e encerrar depois de alguns segundos. As métricas de “Hoje” mudam.</li>
+  <li>No assistente: <b>“O que devo fazer agora?”</b> (Gemini ligado).</li>
+</ol>
+<p class="fala"><b>Fala:</b> “Isso está rodando na EC2, não no nosso computador: se eu fechar o navegador e abrir de novo, as tarefas continuam lá, gravadas no banco do servidor.” (Recarregar a página para mostrar.)</p></div>
+
+<div class="parte"><div class="cab"><span>2. Arquitetura e caminho até o banco</span><span>Vinicius · 3 min</span></div>
+<p class="fala"><b>Mostrar</b> o diagrama do relatório (seção 3).</p>
+<p class="fala"><b>Fala:</b> “O navegador chama o endereço na porta 443. O Security Group da AWS só deixa passar 22, 80 e 443. O Nginx recebe: se é página, entrega os arquivos de <code>/var/www/blitz</code>; se começa com <code>/api/</code>, repassa para o Spring Boot em <code>127.0.0.1:8080</code>, que grava no PostgreSQL em <code>127.0.0.1:5432</code>. Back-end e banco só escutam dentro da máquina. Fora da EC2 ficam só o DNS do sslip.io, o certificado do Let's Encrypt e a API do Gemini.”</p>
+<p class="fala"><b>Prova (Luiz no terminal):</b> a tarefa que o Raphael criou está no banco da EC2:</p>
+<pre>sudo -u postgres psql blitz -c "SELECT titulo, prioridade, status FROM tarefa ORDER BY id DESC LIMIT 3;"</pre>
+<p class="esp">Esperado: as 3 tarefas de exemplo recém-criadas (só título, prioridade e status, sem dado pessoal).</p></div>
+
+<div class="parte"><div class="cab"><span>3. Acesso e ambiente Linux</span><span>Luiz · 3 min</span></div>
+<pre>whoami ; id                       # usuário pessoal, grupo sudo
+hostnamectl ; uname -a            # Ubuntu 26.04 LTS, kernel aws, t3.small
+free -h ; df -h /                 # 2 GB de RAM, disco de 20 GB com 15% usados
+sudo sshd -T | grep -Ei "permitrootlogin|passwordauthentication"     # no / no
+ls -ld /opt/blitz /etc/blitz /var/www/blitz ; ls -l /etc/blitz/blitz.env</pre>
+<p class="fala"><b>Fala:</b> “Cada integrante tem usuário e chave próprios; ninguém recebeu chave privada de outro. Root não entra por SSH e senha não é aceita, só chave. O arquivo de segredos tem permissão 640, dono root e grupo do serviço: um usuário comum não lê, e nunca foi para o Git. A aplicação roda com o usuário <code>blitz</code>, que não tem login nem sudo.”</p></div>
+
+<div class="parte"><div class="cab"><span>4. Rede e Nginx</span><span>Luiz · 3 min</span></div>
+<p class="fala"><b>Console:</b> EC2 → Security Groups → <code>launch-wizard-2</code> → Regras de entrada (22 só IPs /32; 80 e 443 públicas).</p>
+<pre>sudo ss -tlnp                         # 22, 80, 443 abertas; 8080 e 5432 só em 127.0.0.1
+cat /etc/nginx/sites-available/blitz  # root, location /api/ → proxy_pass, bloco 443 do Certbot
+sudo nginx -t                         # syntax is ok / test is successful</pre>
+<p class="fala"><b>No notebook</b> (fora do servidor), o redirecionamento para HTTPS:</p>
+<pre>curl -sI http://18.225.117.192 | grep -iE "^HTTP|^location"   # 301 → https://18-225-117-192.sslip.io/</pre>
+<p class="fala"><b>Fala:</b> “A 8080 não precisa estar aberta: quem fala com o Java é o Nginx, na mesma máquina. Abrir a porta só exporia a API sem TLS e sem os cabeçalhos do Nginx.”</p></div>
+
+<div class="parte"><div class="cab"><span>5. Serviços e reinicialização</span><span>Luiz · 2 min</span></div>
+<pre>systemctl is-enabled nginx blitz postgresql     # enabled ×3
+systemctl status blitz --no-pager | head -5     # active (running)
+cat /etc/systemd/system/blitz.service           # User=blitz, EnvironmentFile, Restart=on-failure</pre>
+<p class="fala"><b>Fala:</b> “Testamos o reboot do sistema operacional em 24/11: o site voltou sozinho em cerca de 30 segundos, sem ninguém iniciar a aplicação (seção 8 do relatório). <i>Reboot</i> mantém o IP; parar e ligar pelo console troca o IP.” <b>Se o professor pedir</b> o reboot ao vivo: <code>sudo systemctl reboot</code>, esperar uns 40 s, reconectar e repetir o <code>is-active</code>.</p></div>
+
+<div class="parte"><div class="cab"><span>6. Monitoramento e logs</span><span>Luiz + Raphael · 2 min</span></div>
+<pre>uptime ; free -h ; df -h / ; ps aux --sort=-%mem | head -4    # o Java é o maior consumidor (~19% da RAM)
+sudo tail -f /var/log/nginx/access.log        # Raphael recarrega a página: as linhas aparecem na hora (Ctrl+C para sair)</pre>
+<p class="fala"><b>No notebook,</b> uma rota inexistente:</p>
+<pre>curl -s -o /dev/null -w "%{http_code}\n" https://18-225-117-192.sslip.io/assets/nao-existe.js   # 404
+sudo tail -n 3 /var/log/nginx/access.log      # a linha do 404 aparece
+sudo journalctl -u blitz -n 15 --no-pager     # log do serviço Java</pre>
+<p class="fala"><b>Fala:</b> “O 404 vem do Nginx, que não achou o arquivo. Uma rota inexistente da API dá 401, porque o Spring exige login antes. O 502, que vamos ver agora, significa outra coisa.”</p></div>
+
+<div class="parte"><div class="cab"><span>7. Incidente controlado</span><span>Luiz + Raphael · 3 min</span></div>
+<pre># 1. saudável (no notebook)
+curl -s -o /dev/null -w "%{http_code}\n" https://18-225-117-192.sslip.io/api/auth/saude     # 200
+# 2. falha introduzida (no servidor)
+sudo systemctl stop blitz
+# 3. efeito: Raphael tenta criar uma tarefa no celular → erro; no notebook, o mesmo curl → 502
+# 4. diagnóstico
+systemctl status blitz --no-pager | head -4             # inactive (dead)
+sudo tail -n 3 /var/log/nginx/error.log                 # connect() failed (111: Connection refused) ... upstream 127.0.0.1:8080
+sudo ss -tlnp | grep 8080                               # nada escutando
+# 5. recuperação
+sudo systemctl start blitz           # o Spring leva ~15 s para subir
+# 6. verificação externa: curl → 200 e Raphael cria a tarefa de novo</pre>
+<p class="fala"><b>Fala:</b> “O Nginx continuou de pé, por isso a página abre mas a API dá 502 Bad Gateway: o proxy não encontrou ninguém em 127.0.0.1:8080. O <code>error.log</code> mostra exatamente isso. Um <code>stop</code> manual não é reiniciado, porque foi intencional. Se o processo morrer sozinho, o <code>Restart=on-failure</code> sobe de novo em 5 segundos; testamos com <code>kill -9</code>.”</p></div>
+
+<div class="parte"><div class="cab"><span>8. Backup e restauração</span><span>Luiz · 2 min</span></div>
+<pre>sudo /opt/blitz-admin/backup.sh                # gera /var/backups/blitz/blitz-DATA.tar.gz
+# no notebook (Git Bash), dentro da pasta do repositório:
+EC2=18.225.117.192 CHAVE=~/.ssh/SUA_CHAVE USUARIO=luiz infra/aws/baixar-backup.sh
+# mandar a cópia externa de volta e restaurar num banco SEPARADO:
+scp -i ~/.ssh/SUA_CHAVE backups-blitz/blitz-DATA.tar.gz luiz@18.225.117.192:/tmp/
+sudo /opt/blitz-admin/restaurar-teste.sh /tmp/blitz-DATA.tar.gz    # contagens iguais + títulos das tarefas</pre>
+<p class="fala"><b>Fala:</b> “O pacote leva o dump do banco, a configuração do Nginx e a unit do systemd; os segredos ficam num arquivo separado que só o root lê. A cópia fica no nosso computador, fora da AWS. Restauramos num banco separado para não mexer na produção. O Git guarda o código; os dados dos usuários só o backup guarda.”</p></div>
+
+<div class="parte"><div class="cab"><span>9. Créditos e encerramento</span><span>Luiz · 1 min</span></div>
+<p class="fala"><b>Console:</b> Configurações → Faturamento (plano Gratuito, créditos restantes, dias restantes).</p>
+<p class="fala"><b>Fala:</b> “Consomem crédito a instância t3.small, o disco de 20 GB, o IPv4 público e o tráfego. A instância da Parte 1 já foi encerrada. Depois da nota: backup final, encerrar a instância, conferir os volumes e apagar Security Group e chaves. Limite da solução: é uma única máquina numa única zona, então se ela cair o sistema fica fora até alguém agir. Alta disponibilidade exigiria duas instâncias, balanceador e banco com réplica.”</p></div>
+
+<h2>Respostas rápidas para as perguntas (os três devem saber)</h2>
+<table>
+  <tr><th>Pergunta</th><th>Resposta curta</th></tr>
+  <tr><td>EC2 × Ubuntu × Nginx?</td><td>EC2 é a máquina virtual da AWS; Ubuntu é o sistema operacional dela; Nginx é o programa servidor web que roda no Ubuntu.</td></tr>
+  <tr><td>Caminho de uma requisição?</td><td>DNS → IP público → Security Group (443) → Nginx (TLS) → arquivo estático ou proxy para 127.0.0.1:8080 → Spring → PostgreSQL.</td></tr>
+  <tr><td>IP público × privado?</td><td>Público (18.225.117.192) é o endereço na Internet; privado (172.31.10.255) só vale dentro da rede da AWS.</td></tr>
+  <tr><td>Por que limitar o SSH?</td><td>Robôs varrem a Internet o tempo todo (aparece no nosso access.log). Com SSH só para IPs /32, ninguém de fora nem tenta a senha ou a chave.</td></tr>
+  <tr><td>Portas 22, 80, 443? E a 8080?</td><td>22 = SSH (administração); 80 = HTTP (só redireciona); 443 = HTTPS. A 8080 é interna: só o Nginx, na mesma máquina, fala com ela.</td></tr>
+  <tr><td>Estático × proxy reverso?</td><td>Estático: o Nginx lê o arquivo do disco e devolve. Proxy: repassa a requisição para outro programa (o Java) e devolve a resposta dele.</td></tr>
+  <tr><td>Terminal × systemd?</td><td>Programa aberto no terminal morre quando o SSH fecha ou a máquina reinicia; o systemd inicia sozinho no boot, reinicia em falha e guarda os logs.</td></tr>
+  <tr><td>Reboot × stop/start?</td><td>Reboot reinicia o sistema operacional e mantém o IP. Stop/start desliga a máquina, que pode voltar em outro hardware e com outro IP público.</td></tr>
+  <tr><td>Por que 502 com Nginx ativo?</td><td>O Nginx está de pé, mas o programa para o qual ele repassa (Java na 8080) não respondeu.</td></tr>
+  <tr><td>Para que serve o access.log?</td><td>Uma linha por requisição: quem, quando, qual caminho, qual código. Mostra se a requisição chegou e o que o servidor respondeu.</td></tr>
+  <tr><td>Como os segredos não vazam?</td><td>Ficam só em /etc/blitz/blitz.env (640), gerados na instalação; o Git tem só um modelo com VALOR_OCULTADO; .pem e .env estão fora do repositório.</td></tr>
+  <tr><td>Git × backup?</td><td>Git guarda o código, que é igual para todos; o backup guarda os dados que os usuários criaram, que só existem no banco.</td></tr>
+  <tr><td>E se o crédito acabar?</td><td>A AWS suspende os recursos do plano gratuito. Por isso há backup fora da AWS e um plano de encerramento: exportar antes, desligar depois.</td></tr>
+  <tr><td>HTTP × HTTPS?</td><td>Em HTTP, senha e cookie viajam legíveis; em HTTPS vão cifrados, e o certificado prova que o servidor é o dono do nome.</td></tr>
+  <tr><td>Limite de uma EC2 só?</td><td>Sem redundância: se a máquina ou a zona cair, o sistema para. Alta disponibilidade exigiria duas instâncias, balanceador e banco com réplica.</td></tr>
+</table>
+
+</body>
+</html>

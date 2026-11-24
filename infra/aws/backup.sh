@@ -8,7 +8,7 @@ set -euo pipefail
 [ "$(id -u)" -eq 0 ] || { echo "rode com sudo"; exit 1; }
 DATA=$(date +%Y%m%d-%H%M)
 TMP=$(mktemp -d)
-install -d -m 750 /var/backups/blitz
+install -d -m 750 -g adm /var/backups/blitz   # grupo adm (administradores) pode listar e baixar; .SEGREDO continua 600
 
 sudo -u postgres pg_dump -Fc blitz > "$TMP/blitz-banco.dump"
 cp /etc/nginx/sites-available/blitz "$TMP/nginx-blitz.conf"

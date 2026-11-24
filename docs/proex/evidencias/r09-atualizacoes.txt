@@ -1,0 +1,41 @@
+=== R09 atualizações e serviços (24/11/2026 19:13 UTC)
+-- pacotes com atualização pendente:
+3
+-- atualizações automáticas de segurança:
+enabled
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+-- ufw:
+Status: inactive
+-- serviços em execução:
+acpid.service
+blitz.service
+chrony.service
+cron.service
+dbus.service
+fwupd.service
+getty@tty1.service
+irqbalance.service
+ModemManager.service
+multipathd.service
+networkd-dispatcher.service
+nginx.service
+packagekit.service
+polkit.service
+postgresql@18-main.service
+rsyslog.service
+serial-getty@ttyS0.service
+snap.amazon-ssm-agent.amazon-ssm-agent.service
+snapd.service
+ssh.service
+systemd-hostnamed.service
+systemd-journald.service
+systemd-logind.service
+systemd-networkd.service
+systemd-resolved.service
+systemd-udevd.service
+udisks2.service
+unattended-upgrades.service
+user@1001.service
+-- apt-get upgrade em 24/11/2026: 2 pacotes atualizados (tzdata, python3-oauthlib), sem necessidade de reboot
+-- 1 pacote retido pela atualização em fases do Ubuntu (libsqlite3-0); o unattended-upgrades aplica quando liberado

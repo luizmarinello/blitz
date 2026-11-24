@@ -9,3 +9,8 @@
    contagem             usuarios | tarefas | listas | migracoes_flyway
    blitz (original)            1 |       0 |      0 | 3
    blitz_restauracao_teste     1 |       0 |      0 | 3   -> idêntico
+
+=== 2º teste (24/11/2026 19:50 UTC), com dados fictícios, como será feito na apresentação
+backup.sh -> blitz-20261124-1950.tar.gz; baixado pelo usuário pessoal luiz (grupo adm) com baixar-backup.sh
+restaurar-teste.sh (cópia do PC) -> blitz: 4 usuários | 7 tarefas | 2 sessões | 3 migrações
+                                   blitz_restauracao_teste: 4 | 7 | 2 | 3 -> idêntico
