@@ -14,3 +14,5 @@ Verificação externa (do PC do integrante):
 Aplicação: COOKIE_SECURE=true e APP_URL=https://18-225-117-192.sslip.io em /etc/blitz/blitz.env
 Limitação: o nome depende do IP; se a instância for parada e ligada, o IP muda e é preciso
   rodar o ativar-https.sh de novo com o novo nome (reboot mantém o IP).
+Teste de renovação (certbot renew --dry-run): "all simulated renewals succeeded"
+certbot.timer ativo: próxima verificação em 25/11/2026 06:30 UTC
