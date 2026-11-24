@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 
 /**
@@ -45,13 +46,24 @@ public class GeminiClient {
             "contents", contents,
             "generationConfig", Map.of("temperature", 0.4, "maxOutputTokens", 700));
 
-        Map<String, Object> r = http.post()
-            .uri("https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent", modelo)
-            .header("x-goog-api-key", apiKey)
-            .header("Content-Type", "application/json")
-            .body(corpo)
-            .retrieve()
-            .body(Map.class);
+        Map<String, Object> r;
+        for (int tentativa = 1; ; tentativa++) {
+            try {
+                r = http.post()
+                    .uri("https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent", modelo)
+                    .header("x-goog-api-key", apiKey)
+                    .header("Content-Type", "application/json")
+                    .body(corpo)
+                    .retrieve()
+                    .body(Map.class);
+                break;
+            } catch (HttpServerErrorException.ServiceUnavailable e) {
+                // 503 = Google sobrecarregado (comum no plano gratuito), costuma passar em segundos.
+                // ponytail: uma nova tentativa após 1,5 s; mais que isso a pessoa espera demais e o assistente local responde (RF17).
+                if (tentativa >= 2) throw e;
+                try { Thread.sleep(1500); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw e; }
+            }
+        }
 
         List<Map<String, Object>> candidatos = (List<Map<String, Object>>) r.get("candidates");
         Map<String, Object> content = (Map<String, Object>) candidatos.get(0).get("content");

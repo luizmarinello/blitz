@@ -105,6 +105,13 @@ class AssistenteLocalTest {
         assertTrue(desconhecida.contains("ajuda") && desconhecida.contains("Pagar boleto"), desconhecida);
     }
 
+    @Test void rapidoSoltoNaoViraPedidoDeTarefaCurta() {
+        String brincadeira = AssistenteLocal.normalizar("opa tudo bem? puxando conversa para acabar com a agua do planeta mais rapido");
+        assertNotEquals(Intencao.TEMPO, AssistenteLocal.intencao(brincadeira));
+        assertEquals(Intencao.TEMPO, AssistenteLocal.intencao(AssistenteLocal.normalizar("Tem alguma tarefa rápida?")));
+        assertEquals(Intencao.TEMPO, AssistenteLocal.intencao(AssistenteLocal.normalizar("quero fazer algo rapidinho")));
+    }
+
     @Test void explicaATelaComOsItensQueOBoltAponta() {
         String r = responder("Me explica a tela Métricas: para que ela serve e o que dá para fazer aqui?");
         assertTrue(r.contains("[[Sua semana]]") && r.contains("[[Foco por dia]]"), r);

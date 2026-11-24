@@ -41,7 +41,8 @@ final class AssistenteLocal {
         CHAVES.put(Intencao.AJUDA, List.of("ajuda", "o que voce faz", "o que voce sabe", "o que voce pode", "como funciona", "como voce funciona", "comandos", "como usar", "o que posso perguntar"));
         CHAVES.put(Intencao.CONCLUI, List.of("terminei", "conclui", "acabei", "finalizei", "entreguei", "ja fiz"));
         CHAVES.put(Intencao.PROXIMA, List.of("proxima", "proximo", "depois disso", "em seguida", "e depois", "outra tarefa", "outra opcao", "mais alguma"));
-        CHAVES.put(Intencao.TEMPO, List.of("menos de", "rapida", "rapido", "rapidas", "curta", "facil", "faceis", "pouco tempo", "intervalo", "terminar em", "tempo livre"));
+        // "rápido" sozinho não basta ("acabar com a água do planeta mais rápido" não é pedido de tarefa curta): só junto de algo/coisa/tarefa
+        CHAVES.put(Intencao.TEMPO, List.of("menos de", "algo rapid", "coisa rapid", "tarefa rapid", "tarefas rapid", "rapidinh", "curta", "facil", "faceis", "pouco tempo", "intervalo", "terminar em", "tempo livre"));
         CHAVES.put(Intencao.PRAZOS, List.of("atrasad", "prazo", " venc", "entrega", "deadline", "agenda", "data limite"));
         CHAVES.put(Intencao.CARGA, List.of("quantas horas", " carga", "sobrecarreg", "da tempo", "dar tempo", "consigo terminar", "capacidade", "quanto trabalho", "muita coisa", "volume", "horas no total", "quanto falta"));
         CHAVES.put(Intencao.RESUMO, List.of("resumo", "status", "progresso", "como estou", "como to", "como eu estou", "como foi", "minha semana", "relatorio da semana", "relatorio semanal", "produtiv", "quanto foquei", "tempo de foco", "metrica", "estatistic", "desempenho", "balanco"));
