@@ -39,7 +39,7 @@ blitz:
   email-remetente: ${EMAIL_REMETENTE:${SMTP_USER:nao-responda@blitz.local}}
   ia:
     api-key: ${GEMINI_API_KEY:}   # vazio = modo fallback (RF17)
-    modelo: ${GEMINI_MODELO:gemini-2.0-flash}
+    modelo: ${GEMINI_MODELO:gemini-3.5-flash-lite}   # gemini-2.0-flash foi descontinuado (404); trocar aqui ou por variável
     limite-tokens-dia: ${IA_LIMITE_TOKENS_DIA:20000}   # RNF09
     pseudonimo-sal: ${IA_PSEUDONIMO_SAL:blitz-dev}    # RNF-LGPD07: id pseudonimizado nos logs
     retencao-dias: ${IA_RETENCAO_DIAS:7}              # achado IA-02: conteudo das conversas apagado apos N dias (0 desliga)

@@ -72,3 +72,7 @@ Interpretação:
 - /api/rota-que-nao-existe -> 401: o Nginx repassou ao Spring, e o Spring Security exige login antes de
   dizer se a rota existe (RN01). Não houve 502, logo o back-end estava ativo.
 - Linha com "Palo Alto Networks": varredura automática da Internet. Mostra por que só 80/443 ficam públicas.
+
+=== IA ligada (24/11/2026 20:05 UTC): GEMINI_MODELO=gemini-3.5-flash-lite, chave só em /etc/blitz/blitz.env
+journalctl -u blitz: "ia usuario=d54d0964761e tokens=218 latenciaMs=899 resultado=OK"
+(usuário aparece só como pseudônimo; o texto da conversa não vai para o log)

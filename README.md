@@ -67,7 +67,7 @@ O plano free dorme a API após inatividade; o primeiro acesso demora alguns segu
 | `DATABASE_URL` | `jdbc:postgresql://localhost:5432/blitz` | URL JDBC (Neon: `jdbc:postgresql://<host>/<db>?sslmode=require`) |
 | `DATABASE_USER` / `DATABASE_PASSWORD` | `blitz` / `blitz` | credenciais do banco |
 | `GEMINI_API_KEY` | vazio | chave do provedor de IA; vazio = modo alternativo |
-| `GEMINI_MODELO` | `gemini-2.0-flash` | modelo |
+| `GEMINI_MODELO` | `gemini-3.5-flash-lite` | modelo (o 2.0-flash foi descontinuado) |
 | `IA_LIMITE_TOKENS_DIA` | `20000` | limite por usuário em 24h (RNF09) |
 | `IA_PSEUDONIMO_SAL` | `blitz-dev` | sal do identificador pseudonimizado nos logs (RNF-LGPD07) |
 | `IA_RETENCAO_DIAS` | `7` | dias até apagar o conteúdo das conversas com a IA, mantendo só data e tokens (achado IA-02); `0` desliga |
